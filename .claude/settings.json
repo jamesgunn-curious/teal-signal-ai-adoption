@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev)",
+      "Bash(npm run build)",
+      "Bash(npm run lint)",
+      "Bash(npm run db:*)",
+      "Bash(npx create-next-app*)",
+      "Bash(npx *)",
+      "Bash(npm install*)",
+      "Bash(npm ci)",
+      "Bash(git *)",
+      "Read",
+      "Edit",
+      "Write"
+    ],
+    "additionalDirectories": [
+      "/Users/jamesgunn/projects/teal-os-framework",
+      "/Users/jamesgunn/projects/signal"
+    ]
+  }
+}
