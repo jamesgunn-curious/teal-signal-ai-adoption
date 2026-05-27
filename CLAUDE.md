@@ -97,13 +97,19 @@ The spec at `specs/2026-05-26-initial/spec.md` is the living contract. Keep stat
 | ❌ | Not yet implemented |
 | 🟠 | Open decision — must be resolved before implementing |
 | ⚠️ | Known issue |
+| ⏸ | Deferred to a later spec or phase |
 
 - ADRs in `docs/adr/` are immutable once accepted — create a new superseding ADR rather than editing.
 - Structural decisions → blueprint (G1 gate). Behaviour decisions → BDD spec (G2 gate).
 - Before implementing a spec section, check for open 🟠 markers — resolve them first.
+- Not every change needs all three gates — small isolated changes don't need full `/teal-os-interpret`; known-issue fixes (⚠️) need G3 only. Match gate overhead to the work.
+- Before implementing, classify blast radius: **Isolated** (single cell, no contract changes) | **Bounded** (cross-cell, contracts documented) | **Entangled** (undocumented cross-cell deps or touches semantics/flow layer). `/teal-os-interpret` Stage 2 output is the primary signal. Entangled work requires G3 before merge.
 - After implementing a phase, run **both** fidelity checks before starting the next phase:
   - `/teal-os-fidelity` — manifest ↔ types.ts ↔ flow.ts alignment (G3 manifest layer)
   - `/spec-fidelity specs/2026-05-26-initial/spec.md` — BDD spec ↔ code alignment (G3 BDD layer)
+- **Ready to ship a section when:** all ❌ statements implemented, 🟠 markers resolved, entangled work passed G3, any triggered ADRs captured, ⚠️ issues fixed or explicitly deferred.
+
+Full SDD conventions: `~/projects/command-centre/projects/teal-os-framework/design/sdd-conventions.md`
 
 ---
 
