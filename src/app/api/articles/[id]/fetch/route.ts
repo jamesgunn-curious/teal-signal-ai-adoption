@@ -38,19 +38,32 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   const check = validateTransition(articleIngestionFlow, article.status as ArticleStatus, 'fetch', 'researcher')
   if (!check.valid) return NextResponse.json({ error: check.reason }, { status: 422 })
 
+  const existingData = article.data as ArticleData
+
   let fetchResult: Awaited<ReturnType<typeof fetchArticleContent>>
   try {
     fetchResult = await fetchArticleContent(article.url)
   } catch (err) {
-    // Mark as failed on fetch error
+    // Stay in discovered with error recorded in data (spec C.2.2)
     const [updated] = await db.update(articles)
-      .set({ status: 'failed', updatedAt: new Date() })
+      .set({ data: { ...existingData, fetchError: String(err) }, updatedAt: new Date() })
       .where(eq(articles.id, id))
       .returning()
     return NextResponse.json({ article: updated, error: String(err) }, { status: 200 })
   }
 
-  const existingData = article.data as ArticleData
+  if (fetchResult.wordCount < 150) {
+    // Thin content — likely paywalled or blocked. Stay in discovered (spec C.2.2)
+    const [updated] = await db.update(articles)
+      .set({
+        data: { ...existingData, fetchError: `thin content (${fetchResult.wordCount} words)`, accessLevel: fetchResult.accessLevel },
+        updatedAt: new Date(),
+      })
+      .where(eq(articles.id, id))
+      .returning()
+    return NextResponse.json({ article: updated, error: 'thin content' }, { status: 200 })
+  }
+
   const updatedData: ArticleData = {
     ...existingData,
     wordCount: fetchResult.wordCount,

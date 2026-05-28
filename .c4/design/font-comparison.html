@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Font Comparison</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=DM+Serif+Display:ital@0;1&family=Droid+Serif:ital,wght@0,400;0,700;1,400;1,700&family=Figtree:ital,wght@0,300..900;1,300..900&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Instrument+Serif:ital@0;1&family=Inter:wght@300..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=Space+Grotesk:wght@300..700&family=Droid+Sans:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --text-xs:   clamp(0.75rem,  0.7rem  + 0.25vw, 0.875rem);
+    --text-sm:   clamp(0.875rem, 0.8rem  + 0.35vw, 1rem);
+    --text-base: clamp(1rem,     0.95rem + 0.25vw, 1.125rem);
+    --text-lg:   clamp(1.125rem, 1rem    + 0.75vw, 1.5rem);
+    --text-xl:   clamp(1.5rem,   1.2rem  + 1.25vw, 2.25rem);
+    --text-2xl:  clamp(2rem,     1.2rem  + 2.5vw,  3.5rem);
+    --space-1:0.25rem;--space-2:0.5rem;--space-3:0.75rem;--space-4:1rem;
+    --space-6:1.5rem;--space-8:2rem;--space-10:2.5rem;--space-12:3rem;--space-16:4rem;
+    --radius-sm:0.375rem;--radius-md:0.5rem;--radius-lg:0.75rem;
+    --radius-xl:1rem;--radius-full:9999px;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  body{font-size:var(--text-base);line-height:1.6;background:#0d0d0d;}
+  h1,h2,h3,h4{text-wrap:balance;line-height:1.15;}
+  p{text-wrap:pretty;max-width:68ch;}
+
+  @font-face{font-family:'Geist';src:url('https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/fonts/geist-sans/Geist-Regular.woff2') format('woff2');font-weight:400;}
+  @font-face{font-family:'Geist';src:url('https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/fonts/geist-sans/Geist-Medium.woff2') format('woff2');font-weight:500;}
+  @font-face{font-family:'Geist';src:url('https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/fonts/geist-sans/Geist-SemiBold.woff2') format('woff2');font-weight:600;}
+  @font-face{font-family:'Geist';src:url('https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/fonts/geist-sans/Geist-Bold.woff2') format('woff2');font-weight:700;}
+
+  .tab-nav{
+    position:sticky;top:0;z-index:100;
+    display:flex;flex-wrap:wrap;gap:var(--space-1);
+    padding:var(--space-3) var(--space-4);
+    background:#111;border-bottom:1px solid #333;
+    align-items:center;
+  }
+  .tab-btn{
+    cursor:pointer;border:1px solid #444;background:#1a1a1a;color:#aaa;
+    padding:var(--space-1) var(--space-3);border-radius:var(--radius-full);
+    font-size:var(--text-xs);font-family:'Inter',sans-serif;
+    transition:all 180ms ease;white-space:nowrap;
+  }
+  .tab-btn:hover{border-color:#888;color:#fff;}
+  .tab-btn.active{background:#fff;color:#000;border-color:#fff;}
+  .tab-divider{font-family:'Inter',sans-serif;font-size:var(--text-xs);color:#555;padding:0 var(--space-2);}
+
+  .font-section{display:none;}
+  .font-section.active{display:block;}
+
+  .theme-grid{display:grid;grid-template-columns:repeat(3,1fr);min-height:100vh;}
+  @media(max-width:900px){.theme-grid{grid-template-columns:1fr;}}
+
+  .panel{padding:var(--space-10) var(--space-8);display:flex;flex-direction:column;gap:var(--space-8);}
+
+  .panel-light{background:#ffffff;color:#111111;border-right:1px solid #e0e0e0;}
+  .panel-light .badge{background:#f0f0f0;color:#333;border:1px solid #ddd;}
+  .panel-light .card{background:#f9f9f9;border:1px solid #e8e8e8;}
+  .panel-light .btn-primary{background:#111;color:#fff;}
+  .panel-light .btn-secondary{background:transparent;color:#111;border:1px solid #ccc;}
+  .panel-light .input-field{background:#fff;border:1px solid #ccc;color:#111;}
+  .panel-light .muted{color:#666;}
+  .panel-light .faint{color:#999;}
+  .panel-light .divider{border-top:1px solid #e0e0e0;}
+  .panel-light .modal-bg{background:rgba(0,0,0,0.04);border:1px solid #ddd;}
+  .panel-light .label{color:#555;}
+
+  .panel-dark{background:#111111;color:#f0f0f0;border-right:1px solid #222;}
+  .panel-dark .badge{background:#2a2a2a;color:#ccc;border:1px solid #333;}
+  .panel-dark .card{background:#1c1c1c;border:1px solid #2e2e2e;}
+  .panel-dark .btn-primary{background:#f0f0f0;color:#111;}
+  .panel-dark .btn-secondary{background:transparent;color:#f0f0f0;border:1px solid #444;}
+  .panel-dark .input-field{background:#1c1c1c;border:1px solid #333;color:#f0f0f0;}
+  .panel-dark .muted{color:#aaa;}
+  .panel-dark .faint{color:#666;}
+  .panel-dark .divider{border-top:1px solid #2e2e2e;}
+  .panel-dark .modal-bg{background:rgba(255,255,255,0.04);border:1px solid #333;}
+  .panel-dark .label{color:#999;}
+
+  .panel-hush{background:#0a0a0a;color:#00e05a;}
+  .panel-hush .badge{background:#0f1f14;color:#00e05a;border:1px solid #00e05a33;}
+  .panel-hush .card{background:#0f0f0f;border:1px solid #00e05a22;}
+  .panel-hush .btn-primary{background:#00e05a;color:#0a0a0a;}
+  .panel-hush .btn-secondary{background:transparent;color:#00e05a;border:1px solid #00e05a66;}
+  .panel-hush .input-field{background:#0f0f0f;border:1px solid #00e05a44;color:#00e05a;}
+  .panel-hush .muted{color:#00a040;}
+  .panel-hush .faint{color:#006025;}
+  .panel-hush .divider{border-top:1px solid #00e05a22;}
+  .panel-hush .modal-bg{background:rgba(0,224,90,0.03);border:1px solid #00e05a33;}
+  .panel-hush .label{color:#00a040;}
+
+  .panel-label{font-size:var(--text-xs);font-family:'Inter',sans-serif;letter-spacing:0.12em;text-transform:uppercase;opacity:0.5;margin-bottom:var(--space-4);}
+
+  .type-specimen h1{font-size:var(--text-2xl);font-weight:700;margin-bottom:var(--space-2);}
+  .type-specimen h2{font-size:var(--text-xl);font-weight:600;margin-bottom:var(--space-2);}
+  .type-specimen h3{font-size:var(--text-lg);font-weight:500;margin-bottom:var(--space-2);}
+  .type-specimen p{font-size:var(--text-base);font-weight:400;margin-bottom:var(--space-4);}
+  .type-specimen .small{font-size:var(--text-sm);}
+  .type-specimen .tiny{font-size:var(--text-xs);letter-spacing:0.05em;}
+
+  .badge{display:inline-block;font-size:var(--text-xs);padding:0.2em 0.75em;border-radius:var(--radius-full);font-weight:500;}
+  .card{border-radius:var(--radius-lg);padding:var(--space-6);}
+  .card h3{font-size:var(--text-base);font-weight:600;margin-bottom:var(--space-2);}
+  .card p{font-size:var(--text-sm);margin-bottom:var(--space-4);}
+  .btn{display:inline-block;font-size:var(--text-sm);font-weight:500;padding:0.6em 1.4em;border-radius:var(--radius-md);cursor:pointer;border:none;font-family:inherit;margin-right:var(--space-2);margin-bottom:var(--space-2);}
+  .form-group{margin-bottom:var(--space-4);}
+  .form-group label{display:block;font-size:var(--text-sm);font-weight:500;margin-bottom:var(--space-1);}
+  .input-field{width:100%;padding:0.55em 0.9em;border-radius:var(--radius-md);font-size:var(--text-sm);font-family:inherit;outline:none;}
+  .input-field:focus{outline:2px solid currentColor;outline-offset:2px;}
+  .divider{margin:var(--space-4) 0;}
+  .modal-bg{border-radius:var(--radius-xl);padding:var(--space-6);margin-top:var(--space-2);}
+  .modal-bg h4{font-size:var(--text-base);font-weight:600;margin-bottom:var(--space-2);}
+  .modal-bg p{font-size:var(--text-sm);margin-bottom:var(--space-4);}
+
+  /* Font families */
+  .font-inter               {font-family:'Inter',sans-serif;}
+  .font-satoshi             {font-family:'Satoshi','Inter',sans-serif;}
+  .font-geist               {font-family:'Geist','Inter',sans-serif;}
+  .font-mona                {font-family:'Mona Sans','Inter',sans-serif;}
+  .font-dm                  {font-family:'DM Sans',sans-serif;}
+  .font-grotesk             {font-family:'Space Grotesk',sans-serif;}
+  .font-figtree             {font-family:'Figtree',sans-serif;}
+  .font-droid-sans          {font-family:'Droid Sans',sans-serif;}
+  .font-droid-serif         {font-family:'Droid Serif',serif;}
+  .font-dm-serif            {font-family:'DM Serif Display',serif;}
+  .font-playfair            {font-family:'Playfair Display',serif;}
+  .font-instrument-serif    {font-family:'Instrument Serif',serif;}
+  .font-fraunces            {font-family:'Fraunces',serif;}
+  .font-source-serif        {font-family:'Source Serif 4',serif;}
+</style>
+</head>
+<body>
+
+<nav class="tab-nav">
+<button class="tab-btn active" onclick="showFont('inter', this)">Inter</button>
+<button class="tab-btn " onclick="showFont('satoshi', this)">Satoshi</button>
+<button class="tab-btn " onclick="showFont('geist', this)">Geist Sans</button>
+<button class="tab-btn " onclick="showFont('mona', this)">Mona Sans</button>
+<button class="tab-btn " onclick="showFont('dm', this)">DM Sans</button>
+<button class="tab-btn " onclick="showFont('grotesk', this)">Space Grotesk</button>
+<button class="tab-btn " onclick="showFont('figtree', this)">Figtree</button>
+<button class="tab-btn " onclick="showFont('droid-sans', this)">Droid Sans</button>
+<button class="tab-btn " onclick="showFont('droid-serif', this)">Droid Serif</button>
+<span class="tab-divider">↓ paired</span>
+<button class="tab-btn" onclick="showFont('droid-paired', this)">Droid Sans + Serif</button>
+<button class="tab-btn" onclick="showFont('dm-paired', this)">DM Serif Display + DM Sans</button>
+<button class="tab-btn" onclick="showFont('playfair-inter', this)">Playfair Display + Inter</button>
+<button class="tab-btn" onclick="showFont('instrument', this)">Instrument Serif + DM Sans</button>
+<button class="tab-btn" onclick="showFont('fraunces-inter', this)">Fraunces + Inter</button>
+<button class="tab-btn" onclick="showFont('source-inter', this)">Source Serif 4 + Inter</button>
+
+</nav>
+
+
+<section class="font-section active" id="font-inter">
+  <div style="padding: var(--space-4) var(--space-8); background: #0d0d0d; border-bottom: 1px solid #222; display:flex; align-items:center; gap:var(--space-4); flex-wrap:wrap;">
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-lg); font-weight:600; color:#fff;">Inter</span>
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-xs); color:#666; letter-spacing:0.08em; text-transform:uppercase;">SIL OFL — Google Fonts</span>
+  </div>
+  <div class="theme-grid">
+    
+    <div class="panel panel-light font-inter">
+      <div class="panel-label">Black on white</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-inter">Inter</h1>
+        <h2 class="font-inter">Heading level two</h2>
+        <h3 class="font-inter">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-inter">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-inter">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-dark font-inter">
+      <div class="panel-label">White on black</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-inter">Inter</h1>
+        <h2 class="font-inter">Heading level two</h2>
+        <h3 class="font-inter">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-inter">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-inter">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-hush font-inter">
+      <div class="panel-label">Green on black</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-inter">Inter</h1>
+        <h2 class="font-inter">Heading level two</h2>
+        <h3 class="font-inter">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-inter">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-inter">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="font-section " id="font-satoshi">
+  <div style="padding: var(--space-4) var(--space-8); background: #0d0d0d; border-bottom: 1px solid #222; display:flex; align-items:center; gap:var(--space-4); flex-wrap:wrap;">
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-lg); font-weight:600; color:#fff;">Satoshi</span>
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-xs); color:#666; letter-spacing:0.08em; text-transform:uppercase;">ITF Free Font License — Fontshare</span>
+  </div>
+  <div class="theme-grid">
+    
+    <div class="panel panel-light font-satoshi">
+      <div class="panel-label">Black on white</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-satoshi">Satoshi</h1>
+        <h2 class="font-satoshi">Heading level two</h2>
+        <h3 class="font-satoshi">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-satoshi">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-satoshi">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-dark font-satoshi">
+      <div class="panel-label">White on black</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-satoshi">Satoshi</h1>
+        <h2 class="font-satoshi">Heading level two</h2>
+        <h3 class="font-satoshi">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-satoshi">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-satoshi">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-hush font-satoshi">
+      <div class="panel-label">Green on black</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-satoshi">Satoshi</h1>
+        <h2 class="font-satoshi">Heading level two</h2>
+        <h3 class="font-satoshi">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-satoshi">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-satoshi">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="font-section " id="font-geist">
+  <div style="padding: var(--space-4) var(--space-8); background: #0d0d0d; border-bottom: 1px solid #222; display:flex; align-items:center; gap:var(--space-4); flex-wrap:wrap;">
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-lg); font-weight:600; color:#fff;">Geist Sans</span>
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-xs); color:#666; letter-spacing:0.08em; text-transform:uppercase;">SIL OFL — Vercel / GitHub</span>
+  </div>
+  <div class="theme-grid">
+    
+    <div class="panel panel-light font-geist">
+      <div class="panel-label">Black on white</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-geist">Geist Sans</h1>
+        <h2 class="font-geist">Heading level two</h2>
+        <h3 class="font-geist">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-geist">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-geist">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-dark font-geist">
+      <div class="panel-label">White on black</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-geist">Geist Sans</h1>
+        <h2 class="font-geist">Heading level two</h2>
+        <h3 class="font-geist">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-geist">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-geist">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-hush font-geist">
+      <div class="panel-label">Green on black</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-geist">Geist Sans</h1>
+        <h2 class="font-geist">Heading level two</h2>
+        <h3 class="font-geist">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-geist">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-geist">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="font-section " id="font-mona">
+  <div style="padding: var(--space-4) var(--space-8); background: #0d0d0d; border-bottom: 1px solid #222; display:flex; align-items:center; gap:var(--space-4); flex-wrap:wrap;">
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-lg); font-weight:600; color:#fff;">Mona Sans</span>
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-xs); color:#666; letter-spacing:0.08em; text-transform:uppercase;">SIL OFL — GitHub</span>
+  </div>
+  <div class="theme-grid">
+    
+    <div class="panel panel-light font-mona">
+      <div class="panel-label">Black on white</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-mona">Mona Sans</h1>
+        <h2 class="font-mona">Heading level two</h2>
+        <h3 class="font-mona">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-mona">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-mona">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-dark font-mona">
+      <div class="panel-label">White on black</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-mona">Mona Sans</h1>
+        <h2 class="font-mona">Heading level two</h2>
+        <h3 class="font-mona">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-mona">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-mona">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-hush font-mona">
+      <div class="panel-label">Green on black</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-mona">Mona Sans</h1>
+        <h2 class="font-mona">Heading level two</h2>
+        <h3 class="font-mona">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-mona">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-mona">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="font-section " id="font-dm">
+  <div style="padding: var(--space-4) var(--space-8); background: #0d0d0d; border-bottom: 1px solid #222; display:flex; align-items:center; gap:var(--space-4); flex-wrap:wrap;">
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-lg); font-weight:600; color:#fff;">DM Sans</span>
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-xs); color:#666; letter-spacing:0.08em; text-transform:uppercase;">SIL OFL — Google Fonts</span>
+  </div>
+  <div class="theme-grid">
+    
+    <div class="panel panel-light font-dm">
+      <div class="panel-label">Black on white</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-dm">DM Sans</h1>
+        <h2 class="font-dm">Heading level two</h2>
+        <h3 class="font-dm">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-dm">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-dm">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-dark font-dm">
+      <div class="panel-label">White on black</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-dm">DM Sans</h1>
+        <h2 class="font-dm">Heading level two</h2>
+        <h3 class="font-dm">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-dm">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-dm">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-hush font-dm">
+      <div class="panel-label">Green on black</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-dm">DM Sans</h1>
+        <h2 class="font-dm">Heading level two</h2>
+        <h3 class="font-dm">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-dm">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-dm">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="font-section " id="font-grotesk">
+  <div style="padding: var(--space-4) var(--space-8); background: #0d0d0d; border-bottom: 1px solid #222; display:flex; align-items:center; gap:var(--space-4); flex-wrap:wrap;">
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-lg); font-weight:600; color:#fff;">Space Grotesk</span>
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-xs); color:#666; letter-spacing:0.08em; text-transform:uppercase;">SIL OFL — Google Fonts</span>
+  </div>
+  <div class="theme-grid">
+    
+    <div class="panel panel-light font-grotesk">
+      <div class="panel-label">Black on white</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-grotesk">Space Grotesk</h1>
+        <h2 class="font-grotesk">Heading level two</h2>
+        <h3 class="font-grotesk">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-grotesk">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-grotesk">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-dark font-grotesk">
+      <div class="panel-label">White on black</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-grotesk">Space Grotesk</h1>
+        <h2 class="font-grotesk">Heading level two</h2>
+        <h3 class="font-grotesk">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-grotesk">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-grotesk">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-hush font-grotesk">
+      <div class="panel-label">Green on black</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-grotesk">Space Grotesk</h1>
+        <h2 class="font-grotesk">Heading level two</h2>
+        <h3 class="font-grotesk">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-grotesk">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-grotesk">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="font-section " id="font-figtree">
+  <div style="padding: var(--space-4) var(--space-8); background: #0d0d0d; border-bottom: 1px solid #222; display:flex; align-items:center; gap:var(--space-4); flex-wrap:wrap;">
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-lg); font-weight:600; color:#fff;">Figtree</span>
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-xs); color:#666; letter-spacing:0.08em; text-transform:uppercase;">SIL OFL — Google Fonts</span>
+  </div>
+  <div class="theme-grid">
+    
+    <div class="panel panel-light font-figtree">
+      <div class="panel-label">Black on white</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-figtree">Figtree</h1>
+        <h2 class="font-figtree">Heading level two</h2>
+        <h3 class="font-figtree">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-figtree">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-figtree">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-dark font-figtree">
+      <div class="panel-label">White on black</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-figtree">Figtree</h1>
+        <h2 class="font-figtree">Heading level two</h2>
+        <h3 class="font-figtree">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-figtree">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-figtree">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-hush font-figtree">
+      <div class="panel-label">Green on black</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-figtree">Figtree</h1>
+        <h2 class="font-figtree">Heading level two</h2>
+        <h3 class="font-figtree">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-figtree">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-figtree">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="font-section " id="font-droid-sans">
+  <div style="padding: var(--space-4) var(--space-8); background: #0d0d0d; border-bottom: 1px solid #222; display:flex; align-items:center; gap:var(--space-4); flex-wrap:wrap;">
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-lg); font-weight:600; color:#fff;">Droid Sans</span>
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-xs); color:#666; letter-spacing:0.08em; text-transform:uppercase;">Apache 2.0 — Google Fonts</span>
+  </div>
+  <div class="theme-grid">
+    
+    <div class="panel panel-light font-droid-sans">
+      <div class="panel-label">Black on white</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-droid-sans">Droid Sans</h1>
+        <h2 class="font-droid-sans">Heading level two</h2>
+        <h3 class="font-droid-sans">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-droid-sans">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-droid-sans">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-dark font-droid-sans">
+      <div class="panel-label">White on black</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-droid-sans">Droid Sans</h1>
+        <h2 class="font-droid-sans">Heading level two</h2>
+        <h3 class="font-droid-sans">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-droid-sans">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-droid-sans">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-hush font-droid-sans">
+      <div class="panel-label">Green on black</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-droid-sans">Droid Sans</h1>
+        <h2 class="font-droid-sans">Heading level two</h2>
+        <h3 class="font-droid-sans">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-droid-sans">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-droid-sans">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="font-section " id="font-droid-serif">
+  <div style="padding: var(--space-4) var(--space-8); background: #0d0d0d; border-bottom: 1px solid #222; display:flex; align-items:center; gap:var(--space-4); flex-wrap:wrap;">
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-lg); font-weight:600; color:#fff;">Droid Serif</span>
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-xs); color:#666; letter-spacing:0.08em; text-transform:uppercase;">Apache 2.0 — Adobe Fonts</span>
+  </div>
+  <div class="theme-grid">
+    
+    <div class="panel panel-light font-droid-serif">
+      <div class="panel-label">Black on white</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-droid-serif">Droid Serif</h1>
+        <h2 class="font-droid-serif">Heading level two</h2>
+        <h3 class="font-droid-serif">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-droid-serif">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-droid-serif">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-dark font-droid-serif">
+      <div class="panel-label">White on black</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-droid-serif">Droid Serif</h1>
+        <h2 class="font-droid-serif">Heading level two</h2>
+        <h3 class="font-droid-serif">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-droid-serif">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-droid-serif">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-hush font-droid-serif">
+      <div class="panel-label">Green on black</div>
+      
+      <div class="type-specimen">
+        <h1 class="font-droid-serif">Droid Serif</h1>
+        <h2 class="font-droid-serif">Heading level two</h2>
+        <h3 class="font-droid-serif">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-droid-serif">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-droid-serif">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="font-section " id="font-droid-paired">
+  <div style="padding: var(--space-4) var(--space-8); background: #0d0d0d; border-bottom: 1px solid #222; display:flex; align-items:center; gap:var(--space-4); flex-wrap:wrap;">
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-lg); font-weight:600; color:#fff;">Droid Sans + Serif</span>
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-xs); color:#666; letter-spacing:0.08em; text-transform:uppercase;">Apache 2.0</span>
+  </div>
+  <div class="theme-grid">
+    
+    <div class="panel panel-light font-droid-serif">
+      <div class="panel-label">Black on white</div>
+      <div style="font-size:var(--text-xs); opacity:0.5; margin-bottom:var(--space-4); font-family:'Inter',sans-serif;">heading: Droid Sans &nbsp;/&nbsp; body: Droid Serif</div>
+      <div class="type-specimen">
+        <h1 class="font-droid-sans">Droid Sans / Droid Serif</h1>
+        <h2 class="font-droid-sans">Heading level two</h2>
+        <h3 class="font-droid-sans">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-droid-sans">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-droid-sans">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-dark font-droid-serif">
+      <div class="panel-label">White on black</div>
+      <div style="font-size:var(--text-xs); opacity:0.5; margin-bottom:var(--space-4); font-family:'Inter',sans-serif;">heading: Droid Sans &nbsp;/&nbsp; body: Droid Serif</div>
+      <div class="type-specimen">
+        <h1 class="font-droid-sans">Droid Sans / Droid Serif</h1>
+        <h2 class="font-droid-sans">Heading level two</h2>
+        <h3 class="font-droid-sans">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-droid-sans">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-droid-sans">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-hush font-droid-serif">
+      <div class="panel-label">Green on black</div>
+      <div style="font-size:var(--text-xs); opacity:0.5; margin-bottom:var(--space-4); font-family:'Inter',sans-serif;">heading: Droid Sans &nbsp;/&nbsp; body: Droid Serif</div>
+      <div class="type-specimen">
+        <h1 class="font-droid-sans">Droid Sans / Droid Serif</h1>
+        <h2 class="font-droid-sans">Heading level two</h2>
+        <h3 class="font-droid-sans">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-droid-sans">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-droid-sans">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="font-section " id="font-dm-paired">
+  <div style="padding: var(--space-4) var(--space-8); background: #0d0d0d; border-bottom: 1px solid #222; display:flex; align-items:center; gap:var(--space-4); flex-wrap:wrap;">
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-lg); font-weight:600; color:#fff;">DM Serif Display + DM Sans</span>
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-xs); color:#666; letter-spacing:0.08em; text-transform:uppercase;">SIL OFL — Google Fonts</span>
+  </div>
+  <div class="theme-grid">
+    
+    <div class="panel panel-light font-dm">
+      <div class="panel-label">Black on white</div>
+      <div style="font-size:var(--text-xs); opacity:0.5; margin-bottom:var(--space-4); font-family:'Inter',sans-serif;">heading: DM Serif Display &nbsp;/&nbsp; body: DM Sans</div>
+      <div class="type-specimen">
+        <h1 class="font-dm-serif">DM Serif Display / DM Sans</h1>
+        <h2 class="font-dm-serif">Heading level two</h2>
+        <h3 class="font-dm-serif">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-dm-serif">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-dm-serif">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-dark font-dm">
+      <div class="panel-label">White on black</div>
+      <div style="font-size:var(--text-xs); opacity:0.5; margin-bottom:var(--space-4); font-family:'Inter',sans-serif;">heading: DM Serif Display &nbsp;/&nbsp; body: DM Sans</div>
+      <div class="type-specimen">
+        <h1 class="font-dm-serif">DM Serif Display / DM Sans</h1>
+        <h2 class="font-dm-serif">Heading level two</h2>
+        <h3 class="font-dm-serif">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-dm-serif">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-dm-serif">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-hush font-dm">
+      <div class="panel-label">Green on black</div>
+      <div style="font-size:var(--text-xs); opacity:0.5; margin-bottom:var(--space-4); font-family:'Inter',sans-serif;">heading: DM Serif Display &nbsp;/&nbsp; body: DM Sans</div>
+      <div class="type-specimen">
+        <h1 class="font-dm-serif">DM Serif Display / DM Sans</h1>
+        <h2 class="font-dm-serif">Heading level two</h2>
+        <h3 class="font-dm-serif">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-dm-serif">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-dm-serif">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="font-section " id="font-playfair-inter">
+  <div style="padding: var(--space-4) var(--space-8); background: #0d0d0d; border-bottom: 1px solid #222; display:flex; align-items:center; gap:var(--space-4); flex-wrap:wrap;">
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-lg); font-weight:600; color:#fff;">Playfair Display + Inter</span>
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-xs); color:#666; letter-spacing:0.08em; text-transform:uppercase;">SIL OFL — Google Fonts</span>
+  </div>
+  <div class="theme-grid">
+    
+    <div class="panel panel-light font-inter">
+      <div class="panel-label">Black on white</div>
+      <div style="font-size:var(--text-xs); opacity:0.5; margin-bottom:var(--space-4); font-family:'Inter',sans-serif;">heading: Playfair Display &nbsp;/&nbsp; body: Inter</div>
+      <div class="type-specimen">
+        <h1 class="font-playfair">Playfair Display / Inter</h1>
+        <h2 class="font-playfair">Heading level two</h2>
+        <h3 class="font-playfair">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-playfair">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-playfair">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-dark font-inter">
+      <div class="panel-label">White on black</div>
+      <div style="font-size:var(--text-xs); opacity:0.5; margin-bottom:var(--space-4); font-family:'Inter',sans-serif;">heading: Playfair Display &nbsp;/&nbsp; body: Inter</div>
+      <div class="type-specimen">
+        <h1 class="font-playfair">Playfair Display / Inter</h1>
+        <h2 class="font-playfair">Heading level two</h2>
+        <h3 class="font-playfair">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-playfair">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-playfair">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-hush font-inter">
+      <div class="panel-label">Green on black</div>
+      <div style="font-size:var(--text-xs); opacity:0.5; margin-bottom:var(--space-4); font-family:'Inter',sans-serif;">heading: Playfair Display &nbsp;/&nbsp; body: Inter</div>
+      <div class="type-specimen">
+        <h1 class="font-playfair">Playfair Display / Inter</h1>
+        <h2 class="font-playfair">Heading level two</h2>
+        <h3 class="font-playfair">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-playfair">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-playfair">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="font-section " id="font-instrument">
+  <div style="padding: var(--space-4) var(--space-8); background: #0d0d0d; border-bottom: 1px solid #222; display:flex; align-items:center; gap:var(--space-4); flex-wrap:wrap;">
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-lg); font-weight:600; color:#fff;">Instrument Serif + DM Sans</span>
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-xs); color:#666; letter-spacing:0.08em; text-transform:uppercase;">SIL OFL — Google Fonts</span>
+  </div>
+  <div class="theme-grid">
+    
+    <div class="panel panel-light font-dm">
+      <div class="panel-label">Black on white</div>
+      <div style="font-size:var(--text-xs); opacity:0.5; margin-bottom:var(--space-4); font-family:'Inter',sans-serif;">heading: Instrument Serif &nbsp;/&nbsp; body: DM Sans</div>
+      <div class="type-specimen">
+        <h1 class="font-instrument-serif">Instrument Serif / DM Sans</h1>
+        <h2 class="font-instrument-serif">Heading level two</h2>
+        <h3 class="font-instrument-serif">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-instrument-serif">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-instrument-serif">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-dark font-dm">
+      <div class="panel-label">White on black</div>
+      <div style="font-size:var(--text-xs); opacity:0.5; margin-bottom:var(--space-4); font-family:'Inter',sans-serif;">heading: Instrument Serif &nbsp;/&nbsp; body: DM Sans</div>
+      <div class="type-specimen">
+        <h1 class="font-instrument-serif">Instrument Serif / DM Sans</h1>
+        <h2 class="font-instrument-serif">Heading level two</h2>
+        <h3 class="font-instrument-serif">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-instrument-serif">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-instrument-serif">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-hush font-dm">
+      <div class="panel-label">Green on black</div>
+      <div style="font-size:var(--text-xs); opacity:0.5; margin-bottom:var(--space-4); font-family:'Inter',sans-serif;">heading: Instrument Serif &nbsp;/&nbsp; body: DM Sans</div>
+      <div class="type-specimen">
+        <h1 class="font-instrument-serif">Instrument Serif / DM Sans</h1>
+        <h2 class="font-instrument-serif">Heading level two</h2>
+        <h3 class="font-instrument-serif">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-instrument-serif">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-instrument-serif">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="font-section " id="font-fraunces-inter">
+  <div style="padding: var(--space-4) var(--space-8); background: #0d0d0d; border-bottom: 1px solid #222; display:flex; align-items:center; gap:var(--space-4); flex-wrap:wrap;">
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-lg); font-weight:600; color:#fff;">Fraunces + Inter</span>
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-xs); color:#666; letter-spacing:0.08em; text-transform:uppercase;">SIL OFL — Google Fonts</span>
+  </div>
+  <div class="theme-grid">
+    
+    <div class="panel panel-light font-inter">
+      <div class="panel-label">Black on white</div>
+      <div style="font-size:var(--text-xs); opacity:0.5; margin-bottom:var(--space-4); font-family:'Inter',sans-serif;">heading: Fraunces &nbsp;/&nbsp; body: Inter</div>
+      <div class="type-specimen">
+        <h1 class="font-fraunces">Fraunces / Inter</h1>
+        <h2 class="font-fraunces">Heading level two</h2>
+        <h3 class="font-fraunces">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-fraunces">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-fraunces">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-dark font-inter">
+      <div class="panel-label">White on black</div>
+      <div style="font-size:var(--text-xs); opacity:0.5; margin-bottom:var(--space-4); font-family:'Inter',sans-serif;">heading: Fraunces &nbsp;/&nbsp; body: Inter</div>
+      <div class="type-specimen">
+        <h1 class="font-fraunces">Fraunces / Inter</h1>
+        <h2 class="font-fraunces">Heading level two</h2>
+        <h3 class="font-fraunces">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-fraunces">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-fraunces">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-hush font-inter">
+      <div class="panel-label">Green on black</div>
+      <div style="font-size:var(--text-xs); opacity:0.5; margin-bottom:var(--space-4); font-family:'Inter',sans-serif;">heading: Fraunces &nbsp;/&nbsp; body: Inter</div>
+      <div class="type-specimen">
+        <h1 class="font-fraunces">Fraunces / Inter</h1>
+        <h2 class="font-fraunces">Heading level two</h2>
+        <h3 class="font-fraunces">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-fraunces">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-fraunces">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="font-section " id="font-source-inter">
+  <div style="padding: var(--space-4) var(--space-8); background: #0d0d0d; border-bottom: 1px solid #222; display:flex; align-items:center; gap:var(--space-4); flex-wrap:wrap;">
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-lg); font-weight:600; color:#fff;">Source Serif 4 + Inter</span>
+    <span style="font-family:'Inter',sans-serif; font-size:var(--text-xs); color:#666; letter-spacing:0.08em; text-transform:uppercase;">SIL OFL — Google Fonts</span>
+  </div>
+  <div class="theme-grid">
+    
+    <div class="panel panel-light font-inter">
+      <div class="panel-label">Black on white</div>
+      <div style="font-size:var(--text-xs); opacity:0.5; margin-bottom:var(--space-4); font-family:'Inter',sans-serif;">heading: Source Serif 4 &nbsp;/&nbsp; body: Inter</div>
+      <div class="type-specimen">
+        <h1 class="font-source-serif">Source Serif 4 / Inter</h1>
+        <h2 class="font-source-serif">Heading level two</h2>
+        <h3 class="font-source-serif">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-source-serif">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-source-serif">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-dark font-inter">
+      <div class="panel-label">White on black</div>
+      <div style="font-size:var(--text-xs); opacity:0.5; margin-bottom:var(--space-4); font-family:'Inter',sans-serif;">heading: Source Serif 4 &nbsp;/&nbsp; body: Inter</div>
+      <div class="type-specimen">
+        <h1 class="font-source-serif">Source Serif 4 / Inter</h1>
+        <h2 class="font-source-serif">Heading level two</h2>
+        <h3 class="font-source-serif">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-source-serif">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-source-serif">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+    <div class="panel panel-hush font-inter">
+      <div class="panel-label">Green on black</div>
+      <div style="font-size:var(--text-xs); opacity:0.5; margin-bottom:var(--space-4); font-family:'Inter',sans-serif;">heading: Source Serif 4 &nbsp;/&nbsp; body: Inter</div>
+      <div class="type-specimen">
+        <h1 class="font-source-serif">Source Serif 4 / Inter</h1>
+        <h2 class="font-source-serif">Heading level two</h2>
+        <h3 class="font-source-serif">Heading level three</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum euismod quam vel velit fringilla, at venenatis nulla sodales. Proin tincidunt eros eget est gravida laoreet.</p>
+        <p class="small">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <p class="tiny muted">TINY LABEL &nbsp;·&nbsp; METADATA &nbsp;·&nbsp; CAPTION TEXT</p>
+      </div>
+      <hr class="divider">
+      <div>
+        <span class="badge">New</span>
+        <span class="badge" style="margin-left:0.5em;">Beta</span>
+      </div>
+      <div class="card">
+        <h3 class="font-source-serif">Card title</h3>
+        <p class="muted">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</p>
+        <button class="btn btn-primary">Primary action</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+      <div class="form-group">
+        <label class="label">Email address</label>
+        <input class="input-field" type="email" placeholder="james@example.com">
+      </div>
+      <div class="modal-bg">
+        <h4 class="font-source-serif">Confirm action</h4>
+        <p class="muted">Your changes have been saved. This action cannot be undone once confirmed. Please review all details before proceeding.</p>
+        <button class="btn btn-primary">Confirm</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+function showFont(slug, btn) {
+  document.querySelectorAll('.font-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('font-' + slug).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

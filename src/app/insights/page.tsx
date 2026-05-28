@@ -5,11 +5,11 @@ import type { InsightStatus, Perspective } from '@/lib/types'
 import { InsightActions } from './insight-actions'
 
 const PERSPECTIVE_COLOURS: Record<Perspective, string> = {
-  practitioner: 'bg-blue-50 text-blue-700',
-  leadership:   'bg-purple-50 text-purple-700',
-  product:      'bg-amber-50 text-amber-700',
-  research:     'bg-green-50 text-green-700',
-  editorial:    'bg-neutral-100 text-neutral-600',
+  practitioner: 'bg-blue-950 border border-blue-800 text-blue-400',
+  leadership:   'bg-purple-950 border border-purple-800 text-purple-400',
+  product:      'bg-amber-950 border border-amber-800 text-amber-400',
+  research:     'bg-[#0f1a12] border border-[#00e05a33] text-[#00c050]',
+  editorial:    'bg-[#111] border border-[#333] text-[#555]',
 }
 
 const DIGEST_SECTIONS = [
@@ -84,7 +84,7 @@ export default async function InsightsPage({
           {rows.map(({ insight }) => {
             const section = digestSection(insight.tags)
             return (
-              <div key={insight.id} className="bg-white rounded-lg border border-neutral-200 px-4 py-4">
+              <div key={insight.id} className="bg-[#0f0f0f] rounded-lg border border-[#00e05a22] px-4 py-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -92,7 +92,7 @@ export default async function InsightsPage({
                         {insight.perspective}
                       </span>
                       {insight.tags.map(tag => (
-                        <span key={tag} className="text-xs bg-neutral-100 text-neutral-500 px-1.5 py-0.5 rounded">{tag}</span>
+                        <span key={tag} className="text-xs bg-[#0f1a12] border border-[#00e05a22] text-[#00a040] px-1.5 py-0.5 rounded">{tag}</span>
                       ))}
                       {section && (
                         <span className="text-xs text-neutral-400 italic">→ {section}</span>
@@ -100,7 +100,7 @@ export default async function InsightsPage({
                     </div>
                     <p className="text-sm text-neutral-900 leading-relaxed">{insight.text}</p>
                     {insight.quote && (
-                      <blockquote className="mt-2 pl-3 border-l-2 border-neutral-200 text-xs text-neutral-500 italic line-clamp-2">
+                      <blockquote className="mt-2 pl-3 border-l-2 border-[#00e05a33] text-xs text-[#00a040] italic line-clamp-2">
                         {insight.quote}
                       </blockquote>
                     )}

@@ -26,14 +26,14 @@ export function InsightActions({ insightId }: { insightId: string }) {
       <button
         onClick={() => transition('curate')}
         disabled={loading !== null}
-        className="text-xs px-2.5 py-1 rounded border border-green-200 text-green-700 hover:bg-green-50 disabled:opacity-40 transition-colors"
+        className="text-xs px-2.5 py-1 rounded border border-[#00e05a66] text-[#00e05a] hover:bg-[#0f1a12] disabled:opacity-40 transition-colors"
       >
         {loading === 'curate' ? '…' : 'Curate'}
       </button>
       <button
         onClick={() => transition('dismiss')}
         disabled={loading !== null}
-        className="text-xs px-2.5 py-1 rounded border border-neutral-200 text-neutral-500 hover:bg-neutral-50 disabled:opacity-40 transition-colors"
+        className="text-xs px-2.5 py-1 rounded border border-[#00e05a22] text-[#00a040] hover:bg-[#0f1a12] disabled:opacity-40 transition-colors"
       >
         {loading === 'dismiss' ? '…' : 'Dismiss'}
       </button>

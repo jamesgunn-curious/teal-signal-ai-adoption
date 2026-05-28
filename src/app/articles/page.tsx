@@ -3,26 +3,10 @@ import { articles, insights } from '@/db/schema'
 import { eq, sql } from 'drizzle-orm'
 import type { ArticleStatus, ArticleData } from '@/lib/types'
 import { ArticleActions } from './article-actions'
+import { StatusChip } from '@/components/ui/status-chip'
+import { ARTICLE_TOKENS } from '@/lib/status-tokens'
 
 const STATUS_ORDER: ArticleStatus[] = ['discovered', 'fetched', 'processed', 'archived', 'paywalled', 'failed']
-
-const STATUS_LABELS: Record<ArticleStatus, string> = {
-  discovered: 'Discovered',
-  fetched:    'Gathered',
-  processed:  'Analysed',
-  archived:   'Archived',
-  paywalled:  'Paywalled',
-  failed:     'Failed',
-}
-
-const STATUS_COLOURS: Record<ArticleStatus, string> = {
-  discovered: 'bg-blue-50 text-blue-700',
-  fetched:    'bg-amber-50 text-amber-700',
-  processed:  'bg-green-50 text-green-700',
-  archived:   'bg-neutral-100 text-neutral-500',
-  paywalled:  'bg-purple-50 text-purple-700',
-  failed:     'bg-red-50 text-red-700',
-}
 
 export default async function ArticlesPage({
   searchParams,
@@ -58,11 +42,11 @@ export default async function ArticlesPage({
 
       <div className="flex gap-2 mb-6 flex-wrap">
         <a href="/articles" className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-          !filterStatus ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+          !filterStatus ? 'bg-[#00e05a] text-[#0a0a0a]' : 'bg-[#0f1a12] border border-[#00e05a22] text-[#00a040] hover:border-[#00e05a44]'
         }`}>All</a>
         {STATUS_ORDER.map(s => (
           <a key={s} href={`/articles?status=${s}`} className={`px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wide transition-colors ${
-            filterStatus === s ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+            filterStatus === s ? 'bg-[#00e05a] text-[#0a0a0a]' : 'bg-[#0f1a12] border border-[#00e05a22] text-[#00a040] hover:border-[#00e05a44]'
           }`}>{STATUS_LABELS[s]}</a>
         ))}
       </div>
@@ -75,7 +59,7 @@ export default async function ArticlesPage({
             const data = article.data as ArticleData
             const insightCount = insightCountMap[article.id] ?? 0
             return (
-              <div key={article.id} className="bg-white rounded-lg border border-neutral-200 px-4 py-3">
+              <div key={article.id} className="bg-[#0f0f0f] rounded-lg border border-[#00e05a22] px-4 py-3">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -101,10 +85,16 @@ export default async function ArticlesPage({
                     {data.executiveSummary && (
                       <p className="text-xs text-neutral-500 mt-1 line-clamp-2">{data.executiveSummary}</p>
                     )}
+                    {data.fetchError && (
+                      <p className="text-xs text-red-500 mt-1">Gather error: {data.fetchError}</p>
+                    )}
+                    {data.analyseError && (
+                      <p className="text-xs text-amber-500 mt-1">Analyse error: {data.analyseError}</p>
+                    )}
                     {data.tags && data.tags.length > 0 && (
                       <div className="flex gap-1 mt-1.5 flex-wrap">
                         {data.tags.map(tag => (
-                          <span key={tag} className="text-xs bg-neutral-100 text-neutral-500 px-1.5 py-0.5 rounded">{tag}</span>
+                          <span key={tag} className="text-xs bg-[#0f1a12] border border-[#00e05a22] text-[#00a040] px-1.5 py-0.5 rounded">{tag}</span>
                         ))}
                       </div>
                     )}

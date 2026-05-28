@@ -9,10 +9,19 @@
       "Bash(npx *)",
       "Bash(npm install*)",
       "Bash(npm ci)",
-      "Bash(git *)",
+      "Bash(git add *)",
+      "Bash(git commit*)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git stash*)",
+      "Bash(git checkout *)",
       "Read",
       "Edit",
       "Write"
+    ],
+    "deny": [
+      "mcp__*"
     ],
     "additionalDirectories": [
       "/Users/jamesgunn/projects/teal-os-framework",

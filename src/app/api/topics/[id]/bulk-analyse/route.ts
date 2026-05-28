@@ -51,16 +51,32 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
   let processed = 0
   let failed = 0
+  let skipped = 0
 
   for (const article of fetched) {
-    if (!article.fullText) { failed++; continue }
+    const existingData = article.data as ArticleData
+
+    if (!article.fullText) {
+      // Legacy article stuck in fetched with no content — move back to discovered for re-gather
+      await db.update(articles)
+        .set({
+          status: 'discovered',
+          data: { ...existingData, fetchError: 'no content — needs re-gather', analyseError: undefined },
+          updatedAt: new Date(),
+        })
+        .where(eq(articles.id, article.id))
+      skipped++
+      continue
+    }
+
     try {
       const result = await extractInsights(article.fullText)
-      const existingData = article.data as ArticleData
+      // Clear any previous analyseError on success
+      const { analyseError: _removed, ...cleanData } = existingData
       await db.update(articles)
         .set({
           status: 'processed',
-          data: { ...existingData, executiveSummary: result.executiveSummary, tags: result.tags },
+          data: { ...cleanData, executiveSummary: result.executiveSummary, tags: result.tags },
           updatedAt: new Date(),
         })
         .where(eq(articles.id, article.id))
@@ -76,10 +92,17 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
         }).onConflictDoNothing()
       ))
       processed++
-    } catch {
+    } catch (err) {
+      // Record the error so the dashboard can distinguish retries from new articles
+      await db.update(articles)
+        .set({
+          data: { ...existingData, analyseError: err instanceof Error ? err.message : 'analysis failed' },
+          updatedAt: new Date(),
+        })
+        .where(eq(articles.id, article.id))
       failed++
     }
   }
 
-  return NextResponse.json({ processed, failed, skipped: 0 })
+  return NextResponse.json({ processed, failed, skipped })
 }

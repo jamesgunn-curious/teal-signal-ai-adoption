@@ -1,6 +1,6 @@
 # Blueprint — Signal Digest
 
-Version: 0.1 | Date: 2026-05-26 | Status: Draft
+Version: 0.2 | Date: 2026-05-28 | Status: Active
 
 This is the structural foundation for the Signal Digest Teal OS implementation. It defines what entities exist, how they relate, and what states they can be in. BDD specs in `specs/` describe what the system *does*; this document describes what the system *is*. Refer to `docs/sdd-approach-ref.md` for the SDD methodology these artefacts follow.
 
@@ -51,16 +51,18 @@ The primary workflow entity. Moves through gather → fetch → process stages, 
 
 **Data fields** (JSONB — see ADR-002):
 
-| Field | Type | Populated at |
-|-------|------|-------------|
-| `title` | string | discover step |
-| `perspective` | enum | discover step (from source config) |
-| `tier` | '1' \| '2' | discover step (from source config) |
-| `word_count` | number | fetch step |
-| `access_level` | enum | fetch step: full, partial, thin |
-| `executive_summary` | string | process step (2-sentence LLM summary) |
-| `tags` | string[] | process step |
-| `full_text` | — | Stored as dedicated `text` column (not in JSONB) — see ADR-003 |
+| Field | Type | Populated at | Notes |
+|-------|------|-------------|-------|
+| `title` | string | discover step | — |
+| `perspective` | enum | discover step (from source config) | — |
+| `tier` | '1' \| '2' | discover step (from source config) | — |
+| `word_count` | number | discover or gather step | Set at discover if RSS content extracted; else set at gather |
+| `access_level` | enum | discover or gather step | `full` (>500w) \| `partial` (150–500w) \| `thin` (<150w) |
+| `executive_summary` | string | analyse step | 2-sentence LLM summary |
+| `tags` | string[] | analyse step | From topic tag vocabulary |
+| `fetch_error` | string? | gather step | Set when gather fails or content is thin; article stays `discovered` |
+| `analyse_error` | string? | analyse step | Set when Claude API call fails; article stays `fetched` for retry; cleared on success |
+| `full_text` | — | — | Stored as dedicated `text` column (not in JSONB) — see ADR-003 |
 
 **States**: `discovered` → `fetched` → `processed` → `archived` + `paywalled` | `failed` (terminal)
 
@@ -121,19 +123,21 @@ An RSS/Atom feed registered against a topic. Config entity — no complex workfl
 
 | Field | Type | Notes |
 |-------|------|-------|
-| `id` | string | Slug |
-| `topic_id` | string | References Topic.id |
-| `name` | string | Display name |
-| `slug` | string | e.g. `lennys-newsletter` |
-| `feed_url` | string | RSS/Atom URL |
-| `perspective` | enum | practitioner, leadership, product, research, editorial |
-| `tier` | '1' \| '2' | Content quality tier |
-| `access_type` | enum | free, free+paid |
-| `status` | SourceStatus | — |
+| `id` | string | Slug — not editable after creation |
+| `topic_id` | string | References Topic.id — not editable after creation |
+| `name` | string | Display name — editable |
+| `slug` | string | e.g. `lennys-newsletter` — same as id |
+| `feed_url` | string | RSS/Atom URL — editable (use Edit to correct wrong URLs) |
+| `perspective` | enum | practitioner, leadership, product, research, editorial — editable |
+| `tier` | '1' \| '2' | Content quality tier — editable |
+| `access_type` | enum | free, free+paid — editable |
+| `status` | SourceStatus | Managed via Pause/Resume/Remove actions |
 
 **States**: `active` | `paused` | `removed`
 
-**Roles**: `researcher` (manage), `reader` (view)
+**Roles**: `researcher` (add, edit, pause, resume, remove), `reader` (view active sources only)
+
+**Edit source:** `PATCH /api/sources/[id]` accepts any combination of `name`, `feedUrl`, `perspective`, `tier`, `accessType`, `status`. The inline Edit form in the dashboard pre-populates current values. Slug and topic_id are immutable.
 
 ---
 
@@ -142,31 +146,47 @@ An RSS/Atom feed registered against a topic. Config entity — no complex workfl
 ### Article ingestion flow
 
 ```
-                      [Gather action]
-                   creates articles in bulk
+                      [Discover action]
+                   fetches RSS feeds in bulk
                              │
-                             ▼
-                         discovered
+              ┌──────────────┴──────────────────────┐
+      RSS has ≥150 words                  RSS has no / thin content
+      content:encoded                               │
+              │                                     ▼
+              │                               discovered
+              │                                     │
+              │              ┌──────────────┬───────┴──────┐
+              │          [Gather]    [Mark paywalled]  (error →
+              │              │              │           fetchError
+              │              │              ▼            in data)
+              │              │           paywalled
+              │              │           (terminal)
+              └──────────────▼
+                          fetched
                              │
-              ┌──────────────┼──────────────┐
-         [Fetch]      [Mark paywalled]  [Mark failed]
-              │              │               │
-              ▼              ▼               ▼
-           fetched        paywalled        failed
-              │           (terminal)      (terminal)
-         [Process]
-              │
-              ▼
-          processed
-              │
-          [Archive]
-              │
-              ▼
-           archived
-           (terminal)
+                    ┌────────┴────────┐
+                [Analyse]        (error →
+                    │           analyseError
+                    │            in data,
+                    │           stays fetched
+                    │            for retry)
+                    ▼
+                processed
+                    │
+                [Archive]
+                    │
+                    ▼
+                 archived
+                 (terminal)
+                 
+              failed (terminal) — manual mark only
 ```
 
-Key constraint: `paywalled` and `failed` are terminal — no transition out. A researcher who resolves access to a paywalled article creates a new article instance rather than un-terminating the old one.
+Key constraints:
+- `paywalled`, `failed`, and `archived` are terminal — no transition out
+- `fetchError` and `analyseError` are recorded in `data` JSONB; article stays in its current status for retry
+- Articles with RSS content (≥ 150 words in `<content:encoded>`) are created as `fetched` at Discover time — Gather step is skipped
+- Legacy `fetched` articles with no `full_text` are moved back to `discovered` by bulk-analyse (data cleanup)
 
 ### Insight curation flow
 
@@ -204,6 +224,8 @@ interface ArticleData {
   accessLevel?: AccessLevel
   executiveSummary?: string
   tags: string[]
+  fetchError?: string    // set when gather fails or thin content; article stays discovered
+  analyseError?: string  // set when Claude API fails; article stays fetched for retry; cleared on success
   // fullText is NOT in ArticleData — it is a dedicated text column on the articles table (see ADR-003)
 }
 
@@ -258,12 +280,22 @@ Next.js version: read from `node_modules/next/dist/docs/` before writing any Nex
 `full_text` is a dedicated `text` column on the `articles` table, not part of the JSONB `data` field. This keeps the JSONB data field for variable content metadata while giving `full_text` its own typed column (enabling future full-text search indexing if needed). All other article content fields remain in JSONB per ADR-002.
 
 ✅ **Multi-topic UI** — Resolved 2026-05-26.
-Single topic (`ai-adoption`) for v1. Multi-topic is a major UX scope addition — adds navigation layer, topic switching, scoping across all cells. Deferred. When building cells, do not design against a hardcoded topic ID; use a topic reference that can be parameterised later, but don't build topic-switching UI.
+Single topic (`ai-adoption`) for v1. Multi-topic is a major UX scope addition. Deferred. Do not hardcode topic IDs; use a parameterisable reference, but don't build topic-switching UI.
+
+✅ **RSS content extraction at Discover** — Resolved 2026-05-28.
+The Discover route extracts `<content:encoded>` (preferring it) or `<description>` from each RSS item. If the resulting plain text is ≥ 150 words, the article is created as `fetched` with `full_text` already set — the Gather step is skipped. This is critical for newsletter platforms (Substack, etc.) that render their article pages client-side and cannot be scraped via plain HTTP fetch. Free articles typically yield full text; paywalled articles yield a teaser (usually sufficient for analysis).
+
+✅ **Analyse error tracking** — Resolved 2026-05-28.
+When bulk-analyse encounters a Claude API failure, `analyseError` is written to the article's `data` JSONB and the article remains in `fetched` status. On the next successful analysis, `analyseError` is cleared. The dashboard distinguishes new `fetched` articles (no prior attempt) from retry candidates (have `analyseError`) and shows separate "Analyse N new" and "Retry M" buttons. Error messages are surfaced on article cards.
+
+✅ **Source editability** — Resolved 2026-05-28.
+Sources can be edited (name, feedUrl, perspective, tier, accessType) via `PATCH /api/sources/[id]` and inline Edit form. Slug and topic_id are immutable. Motivation: incorrect feed URLs (e.g. Substack profile page vs RSS URL) need to be correctable without removing and re-adding the source.
 
 ⏸ **Insight editing post-extraction** — Deferred. See `.c4/design/insight-editing-extension.md`.
 
-🟠 **Batch actions** (affects: article queue cell, insight list cell)
-Batch fetch / batch process UX is in scope but awaiting UI design (to be supplied via claude-design URL). Do not build the article queue cell's selection/batch controls until the design is provided.
+⏸ **Thread layer** — Specced. See `specs/2026-05-27-hypothesis-layer/spec.md`. Research threads (formerly hypotheses) are a first-class entity with a separate build plan.
+
+🟠 **Batch actions (selected articles)** — Awaiting UI design. Bulk-all (gather all, analyse all, retry all) is implemented. Individual article selection + batch apply is deferred pending design.
 
 ---
 
@@ -273,7 +305,9 @@ The `ai-adoption` topic from the existing signal system provides the initial see
 
 **Perspectives**: practitioner, leadership, product, research, editorial
 
-**Sources (9)**: lennys-newsletter, pragmatic-engineer, engineering-leadership, the-beautiful-mess, dev-interrupted, the-engineering-manager, one-useful-thing, leaddev, martinfowler
+**Sources (seeded — 9)**: lennys-newsletter, pragmatic-engineer, engineering-leadership (canopy.is — dormant since Aug 2025), the-beautiful-mess, dev-interrupted, the-engineering-manager, one-useful-thing, leaddev, martinfowler
+
+**Sources (added via UI)**: @gregorojstersek → `newsletter.eng-leadership.com/feed` (Gregor Ojstersek, weekly engineering leadership)
 
 **Tag vocabulary (22 tags, 5 groups)**:
 - Problem selection: right-problem, prioritisation, differentiation

@@ -8,6 +8,21 @@ interface RssItem {
   title: string
   link: string
   pubDate: string
+  contentText?: string  // extracted from <content:encoded> or <description>
+  wordCount?: number
+}
+
+function extractCdata(str: string): string {
+  return str.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim()
+}
+
+function htmlToText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 async function fetchRssFeed(feedUrl: string, lookbackDays: number): Promise<RssItem[]> {
@@ -26,8 +41,9 @@ async function fetchRssFeed(feedUrl: string, lookbackDays: number): Promise<RssI
 
   for (const match of itemMatches) {
     const block = match[1]
-    const title = (block.match(/<title[^>]*><!\[CDATA\[(.*?)\]\]><\/title>/) ||
-                   block.match(/<title[^>]*>(.*?)<\/title>/))?.[1]?.trim() ?? ''
+    const title = extractCdata(
+      (block.match(/<title[^>]*>([\s\S]*?)<\/title>/))?.[1]?.trim() ?? ''
+    )
     const link  = (block.match(/<link[^>]*>(.*?)<\/link>/))?.[1]?.trim() ??
                   (block.match(/<link[^>]*href="([^"]+)"/))?.[1]?.trim() ?? ''
     const pubDate = (block.match(/<pubDate[^>]*>(.*?)<\/pubDate>/))?.[1]?.trim() ?? ''
@@ -36,7 +52,14 @@ async function fetchRssFeed(feedUrl: string, lookbackDays: number): Promise<RssI
     const pub = new Date(pubDate)
     if (isNaN(pub.getTime()) || pub < cutoff) continue
 
-    items.push({ title, link, pubDate })
+    // Prefer <content:encoded> (full text), fall back to <description> (teaser)
+    const encodedRaw = (block.match(/<content:encoded[^>]*>([\s\S]*?)<\/content:encoded>/))?.[1] ?? ''
+    const descRaw    = (block.match(/<description[^>]*>([\s\S]*?)<\/description>/))?.[1] ?? ''
+    const richRaw    = extractCdata(encodedRaw) || extractCdata(descRaw)
+    const contentText = richRaw ? htmlToText(richRaw) : undefined
+    const wordCount = contentText ? contentText.split(' ').filter(Boolean).length : 0
+
+    items.push({ title, link, pubDate, contentText: contentText || undefined, wordCount: wordCount || undefined })
   }
 
   return items
@@ -67,11 +90,17 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
       for (const item of items) {
         const dateStr = new Date(item.pubDate).toISOString().split('T')[0]
         const id = `${source.slug}--${dateStr}--${slugify(item.title)}`
+
+        // If RSS gave us usable content, pre-populate fullText and mark fetched directly
+        const hasRssContent = (item.wordCount ?? 0) >= 150
+        const accessLevel = (item.wordCount ?? 0) > 500 ? 'full' : 'partial'
+
         const data: ArticleData = {
           title: item.title,
           perspective: source.perspective as ArticleData['perspective'],
           tier: source.tier as ArticleData['tier'],
           tags: [],
+          ...(hasRssContent ? { wordCount: item.wordCount, accessLevel } : {}),
         }
 
         const inserted = await db.insert(articles).values({
@@ -80,7 +109,8 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
           sourceSlug: source.id,
           url: item.link,
           publishedDate: dateStr,
-          status: 'discovered',
+          status: hasRssContent ? 'fetched' : 'discovered',
+          fullText: hasRssContent ? item.contentText : null,
           data,
         }).onConflictDoNothing().returning()
 

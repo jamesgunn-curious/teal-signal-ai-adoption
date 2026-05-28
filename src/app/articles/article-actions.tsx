@@ -36,7 +36,7 @@ export function ArticleActions({ articleId, status }: Props) {
       key={action}
       onClick={() => runAction(action, endpoint)}
       disabled={loading !== null}
-      className="text-xs px-2.5 py-1 rounded border border-neutral-200 text-neutral-600 hover:bg-neutral-50 disabled:opacity-40 transition-colors whitespace-nowrap"
+      className="text-xs px-2.5 py-1 rounded border border-[#00e05a33] text-[#00a040] hover:bg-[#0f1a12] hover:text-[#00e05a] disabled:opacity-40 transition-colors whitespace-nowrap"
     >
       {loading === action ? '…' : label}
     </button>

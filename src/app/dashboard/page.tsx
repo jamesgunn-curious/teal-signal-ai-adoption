@@ -1,25 +1,17 @@
 import { db } from '@/db'
 import { articles, insights, sources } from '@/db/schema'
 import { eq, sql } from 'drizzle-orm'
-import type { ArticleStatus, InsightStatus, SourceStatus } from '@/lib/types'
+import type { ArticleStatus, InsightStatus, SourceStatus, Perspective, Tier } from '@/lib/types'
 import { DiscoverButton } from './discover-button'
 import { BulkActions } from './bulk-actions'
 import { SourceActions } from './source-actions'
 import { AddSourceForm } from './add-source-form'
+import { StatusChip } from '@/components/ui/status-chip'
 
 const TOPIC_ID = 'ai-adoption'
 
-const STATUS_LABELS: Record<string, string> = {
-  discovered: 'Discovered',
-  fetched:    'Gathered',
-  processed:  'Analysed',
-  archived:   'Archived',
-  paywalled:  'Paywalled',
-  failed:     'Failed',
-}
-
 async function getDashboardData() {
-  const [articleRows, insightRows, allSources, articlesBySource] = await Promise.all([
+  const [articleRows, insightRows, allSources, articlesBySource, analyseRetries] = await Promise.all([
     db.select({ status: articles.status }).from(articles).where(eq(articles.topicId, TOPIC_ID)),
     db.select({ status: insights.status }).from(insights)
       .innerJoin(articles, eq(insights.articleId, articles.id))
@@ -30,6 +22,13 @@ async function getDashboardData() {
       status: articles.status,
       count: sql<number>`count(*)::int`,
     }).from(articles).where(eq(articles.topicId, TOPIC_ID)).groupBy(articles.sourceSlug, articles.status),
+    db.select({ count: sql<number>`count(*)::int` })
+      .from(articles)
+      .where(and(
+        eq(articles.topicId, TOPIC_ID),
+        eq(articles.status, 'fetched'),
+        sql`${articles.data}->>'analyseError' IS NOT NULL`,
+      )),
   ])
 
   const count = (rows: { status: string }[], status: string) =>
@@ -52,20 +51,22 @@ async function getDashboardData() {
     sourceStats[row.sourceSlug][row.status] = row.count
   }
 
-  return { pipeline, sources: allSources, sourceStats }
+  const retryCount = analyseRetries[0]?.count ?? 0
+
+  return { pipeline, sources: allSources, sourceStats, retryCount }
 }
 
 function PipelineStep({
   label, count, href, highlight = false,
 }: { label: string; count: number; href: string; highlight?: boolean }) {
   return (
-    <a href={href} className={`flex-1 rounded-lg border px-4 py-4 text-center transition-colors hover:border-neutral-400 ${
-      highlight ? 'border-neutral-900 bg-neutral-900 text-white' : 'border-neutral-200 bg-white text-neutral-900'
+    <a href={href} className={`flex-1 rounded-lg border px-4 py-4 text-center transition-colors ${
+      highlight
+        ? 'border-[#00e05a] bg-[#00e05a] text-[#0a0a0a] hover:bg-[#00f060]'
+        : 'border-[#00e05a22] bg-[#0f0f0f] text-[#00e05a] hover:border-[#00e05a66]'
     }`}>
-      <p className={`text-3xl font-semibold tabular-nums ${highlight ? 'text-white' : 'text-neutral-900'}`}>
-        {count}
-      </p>
-      <p className={`text-xs mt-1 uppercase tracking-wide ${highlight ? 'text-neutral-300' : 'text-neutral-500'}`}>
+      <p className="text-3xl font-semibold tabular-nums">{count}</p>
+      <p className={`text-xs mt-1 uppercase tracking-wide ${highlight ? 'text-[#0a0a0a]' : 'text-[#00a040]'}`}>
         {label}
       </p>
     </a>
@@ -76,17 +77,9 @@ function Arrow() {
   return <div className="self-center text-neutral-300 text-lg shrink-0">→</div>
 }
 
-const STATUS_COLOURS: Record<string, string> = {
-  discovered: 'bg-blue-50 text-blue-700',
-  fetched:    'bg-amber-50 text-amber-700',
-  processed:  'bg-green-50 text-green-700',
-  archived:   'bg-neutral-100 text-neutral-500',
-  paywalled:  'bg-purple-50 text-purple-700',
-  failed:     'bg-red-50 text-red-700',
-}
 
 export default async function DashboardPage() {
-  const { pipeline, sources: allSources, sourceStats } = await getDashboardData()
+  const { pipeline, sources: allSources, sourceStats, retryCount } = await getDashboardData()
   const totalArticles = pipeline.discovered + pipeline.fetched + pipeline.processed + pipeline.archived + pipeline.paywalled + pipeline.failed
 
   return (
@@ -107,6 +100,7 @@ export default async function DashboardPage() {
             topicId={TOPIC_ID}
             discoveredCount={pipeline.discovered}
             gatheredCount={pipeline.fetched}
+            retryCount={retryCount}
           />
         </div>
       </div>
@@ -149,7 +143,7 @@ export default async function DashboardPage() {
           </h2>
           <AddSourceForm topicId={TOPIC_ID} />
         </div>
-        <div className="bg-white rounded-lg border border-neutral-200 divide-y divide-neutral-100">
+        <div className="bg-[#0f0f0f] rounded-lg border border-[#00e05a22] divide-y divide-[#00e05a15]">
           {allSources.filter(s => s.status !== 'removed').map(source => {
             const stats = sourceStats[source.id] ?? {}
             const total = Object.values(stats).reduce((a, b) => a + b, 0)
@@ -164,27 +158,30 @@ export default async function DashboardPage() {
                         source.status === 'active' ? 'bg-green-500' : 'bg-amber-400'
                       }`} />
                       <span className="text-sm font-medium truncate">{source.name}</span>
-                      <span className="text-xs text-neutral-400 capitalize shrink-0">
+                      <span className="text-xs text-[#00a040] capitalize shrink-0">
                         {source.perspective} · T{source.tier}
                       </span>
                     </div>
                     {total > 0 ? (
                       <div className="flex items-center gap-2 mt-1.5 ml-3.5 flex-wrap">
                         {activeStatuses.map(([status, n]) => (
-                          <a
-                            key={status}
-                            href={`/articles?status=${status}`}
-                            className={`text-xs px-1.5 py-0.5 rounded font-medium ${STATUS_COLOURS[status] ?? 'bg-neutral-100 text-neutral-500'}`}
-                          >
-                            {n} {STATUS_LABELS[status] ?? status}
+                          <a key={status} href={`/articles?status=${status}`}>
+                            <StatusChip status={status} label={`${n} ${status}`} />
                           </a>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-neutral-300 mt-1 ml-3.5">No articles yet</p>
+                      <p className="text-xs text-[#006025] mt-1 ml-3.5">No articles yet</p>
                     )}
                   </div>
-                  <SourceActions sourceId={source.id} status={source.status as SourceStatus} />
+                  <SourceActions
+                    sourceId={source.id}
+                    status={source.status as SourceStatus}
+                    name={source.name}
+                    feedUrl={source.feedUrl}
+                    perspective={source.perspective as Perspective}
+                    tier={source.tier as Tier}
+                  />
                 </div>
               </div>
             )

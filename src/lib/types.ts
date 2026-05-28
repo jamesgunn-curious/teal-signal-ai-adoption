@@ -19,6 +19,8 @@ export interface ArticleData {
   accessLevel?: AccessLevel
   executiveSummary?: string
   tags: string[]
+  fetchError?: string    // set when gather fails or content is thin; article stays in discovered
+  analyseError?: string  // set when Claude analysis fails; article stays in fetched for retry
 }
 
 export interface ArticleInstance {

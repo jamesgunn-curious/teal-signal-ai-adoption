@@ -9,10 +9,11 @@ interface BulkResult {
   skipped: number
 }
 
-export function BulkActions({ topicId, discoveredCount, gatheredCount }: {
+export function BulkActions({ topicId, discoveredCount, gatheredCount, retryCount }: {
   topicId: string
   discoveredCount: number
   gatheredCount: number
+  retryCount: number
 }) {
   const router = useRouter()
   const [loading, setLoading] = useState<'gather' | 'analyse' | null>(null)
@@ -31,32 +32,44 @@ export function BulkActions({ topicId, discoveredCount, gatheredCount }: {
     }
   }
 
+  const newToAnalyse = gatheredCount - retryCount
+
   if (discoveredCount === 0 && gatheredCount === 0) return null
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap justify-end">
       {discoveredCount > 0 && (
         <button
           onClick={() => runBulk('gather')}
           disabled={loading !== null}
-          className="px-3 py-1.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-md hover:bg-amber-100 disabled:opacity-50 transition-colors"
+          className="px-3 py-1.5 border border-amber-800 text-amber-400 bg-amber-950 text-xs rounded hover:bg-amber-900 disabled:opacity-50 transition-colors"
         >
           {loading === 'gather' ? 'Gathering…' : `Gather all ${discoveredCount}`}
         </button>
       )}
-      {gatheredCount > 0 && (
+      {newToAnalyse > 0 && (
         <button
           onClick={() => runBulk('analyse')}
           disabled={loading !== null}
-          className="px-3 py-1.5 bg-green-50 border border-green-200 text-green-800 text-xs rounded-md hover:bg-green-100 disabled:opacity-50 transition-colors"
+          className="px-3 py-1.5 border border-[#00e05a66] text-[#00e05a] bg-[#0f1a12] text-xs rounded hover:bg-[#162a1a] disabled:opacity-50 transition-colors"
         >
-          {loading === 'analyse' ? 'Analysing…' : `Analyse all ${gatheredCount}`}
+          {loading === 'analyse' ? 'Analysing…' : `Analyse ${newToAnalyse} new`}
+        </button>
+      )}
+      {retryCount > 0 && (
+        <button
+          onClick={() => runBulk('analyse')}
+          disabled={loading !== null}
+          className="px-3 py-1.5 border border-[#00e05a33] text-[#00a040] bg-[#0f1a12] text-xs rounded hover:bg-[#162a1a] disabled:opacity-50 transition-colors"
+        >
+          {loading === 'analyse' && newToAnalyse === 0 ? 'Retrying…' : `Retry ${retryCount}`}
         </button>
       )}
       {result && (
-        <span className="text-xs text-neutral-500">
+        <span className="text-xs text-[#00a040]">
           {result.action === 'gather' ? 'Gathered' : 'Analysed'} {result.processed}
-          {result.failed > 0 ? `, ${result.failed} failed` : ''}
+          {result.failed > 0 ? ` · ${result.failed} failed` : ''}
+          {result.skipped > 0 ? ` · ${result.skipped} skipped` : ''}
         </span>
       )}
     </div>

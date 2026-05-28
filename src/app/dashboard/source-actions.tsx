@@ -2,11 +2,24 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { SourceStatus } from '@/lib/types'
+import type { SourceStatus, Perspective, Tier } from '@/lib/types'
+import { EditSourceForm } from './edit-source-form'
 
-export function SourceActions({ sourceId, status }: { sourceId: string; status: SourceStatus }) {
+const btn = 'text-xs px-2 py-0.5 rounded border disabled:opacity-40 transition-colors'
+
+interface Props {
+  sourceId: string
+  status: SourceStatus
+  name: string
+  feedUrl: string
+  perspective: Perspective
+  tier: Tier
+}
+
+export function SourceActions({ sourceId, status, name, feedUrl, perspective, tier }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [editing, setEditing] = useState(false)
 
   async function setStatus(newStatus: SourceStatus) {
     setLoading(true)
@@ -25,32 +38,36 @@ export function SourceActions({ sourceId, status }: { sourceId: string; status: 
   if (status === 'removed') return null
 
   return (
-    <div className="flex gap-1.5">
-      {status === 'active' && (
-        <button
-          onClick={() => setStatus('paused')}
-          disabled={loading}
-          className="text-xs px-2 py-0.5 rounded border border-neutral-200 text-neutral-500 hover:bg-neutral-50 disabled:opacity-40 transition-colors"
-        >
-          Pause
+    <div>
+      <div className="flex gap-1.5">
+        <button onClick={() => setEditing(e => !e)} disabled={loading}
+          className={`${btn} border-[#00e05a22] text-[#006025] hover:bg-[#0f1a12] hover:text-[#00a040]`}>
+          Edit
         </button>
-      )}
-      {status === 'paused' && (
-        <button
-          onClick={() => setStatus('active')}
-          disabled={loading}
-          className="text-xs px-2 py-0.5 rounded border border-green-200 text-green-700 hover:bg-green-50 disabled:opacity-40 transition-colors"
-        >
-          Resume
+        {status === 'active' && (
+          <button onClick={() => setStatus('paused')} disabled={loading}
+            className={`${btn} border-[#00e05a33] text-[#00a040] hover:bg-[#0f1a12]`}>
+            Pause
+          </button>
+        )}
+        {status === 'paused' && (
+          <button onClick={() => setStatus('active')} disabled={loading}
+            className={`${btn} border-[#00e05a66] text-[#00e05a] hover:bg-[#0f1a12]`}>
+            Resume
+          </button>
+        )}
+        <button onClick={() => setStatus('removed')} disabled={loading}
+          className={`${btn} border-red-900 text-red-500 hover:bg-red-950`}>
+          Remove
         </button>
+      </div>
+      {editing && (
+        <EditSourceForm
+          sourceId={sourceId}
+          initial={{ name, feedUrl, perspective, tier }}
+          onClose={() => setEditing(false)}
+        />
       )}
-      <button
-        onClick={() => setStatus('removed')}
-        disabled={loading}
-        className="text-xs px-2 py-0.5 rounded border border-red-100 text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors"
-      >
-        Remove
-      </button>
     </div>
   )
 }

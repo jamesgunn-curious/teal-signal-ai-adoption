@@ -37,16 +37,34 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     try {
       const result = await fetchArticleContent(article.url)
       const existingData = article.data as ArticleData
+      if (result.wordCount < 150) {
+        // Thin content — likely paywalled or blocked. Stay in discovered with error note.
+        await db.update(articles)
+          .set({
+            data: { ...existingData, fetchError: `thin content (${result.wordCount} words)`, accessLevel: result.accessLevel },
+            updatedAt: new Date(),
+          })
+          .where(eq(articles.id, article.id))
+        failed++
+      } else {
+        await db.update(articles)
+          .set({
+            status: 'fetched',
+            fullText: result.fullText,
+            data: { ...existingData, wordCount: result.wordCount, accessLevel: result.accessLevel },
+            updatedAt: new Date(),
+          })
+          .where(eq(articles.id, article.id))
+        processed++
+      }
+    } catch (err) {
+      const existingData = article.data as ArticleData
       await db.update(articles)
         .set({
-          status: 'fetched',
-          fullText: result.fullText,
-          data: { ...existingData, wordCount: result.wordCount, accessLevel: result.accessLevel },
+          data: { ...existingData, fetchError: err instanceof Error ? err.message : 'fetch failed' },
           updatedAt: new Date(),
         })
         .where(eq(articles.id, article.id))
-      processed++
-    } catch {
       failed++
     }
   }

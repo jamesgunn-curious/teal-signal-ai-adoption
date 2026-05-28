@@ -1,9 +1,7 @@
 # BDD Spec — Signal Digest (Initial)
 
-Version: 0.3 | Date: 2026-05-27 | Status: Active — implementation in progress
+Version: 0.4 | Date: 2026-05-28 | Status: Active — implementation in progress
 Blueprint: `docs/blueprint.md` | ADRs: `docs/adr/`
-
-Status markers reflect current implementation state as of 2026-05-27.
 
 Status markers: ✅ implemented | ❌ not implemented | 🟠 open decision — resolve before implementing | ⚠️ known issue | ⏸ deferred
 
@@ -29,7 +27,7 @@ Then the topic status changes to `archived`, all associated sources are paused, 
 
 > Note: Deferred with A.1.1.
 
-⏸ **A.1.3** — *Deferred: Hypothesis management is out of scope for v1. Parked as a teal-os extension candidate — see `.c4/design/hypothesis-management-extension.md`.*
+⏸ **A.1.3** — *Deferred to Thread Layer spec. Specced in `specs/2026-05-27-hypothesis-layer/spec.md`. Research threads (formerly hypotheses) are a separate build.*
 
 ### A.2 — Manage sources
 
@@ -53,6 +51,14 @@ Given I am a researcher viewing any source,
 When I click "Remove source",
 Then the source status changes to `removed`, it is permanently excluded from gather runs, and existing articles from that source are retained.
 
+✅ **A.2.5**
+Given I am a researcher viewing any active or paused source,
+When I click "Edit" on a source,
+Then an inline form appears pre-populated with the source's current name, feed URL, perspective, and tier,
+And I can update any of those fields and save — the slug and topic association are not editable.
+
+> Note: Edit source was added to fix incorrect feed URLs entered via Add Source (e.g. Substack profile URL vs RSS feed URL). PATCH `/api/sources/[id]` accepts name, feedUrl, perspective, tier, accessType in addition to status.
+
 ### A.3 — Topic summary view
 
 ✅ **A.3.1**
@@ -62,33 +68,35 @@ Then I can see article counts by status (discovered, fetched, processed, archive
 
 ---
 
-## Section B — Article Gather
+## Section B — Article Discover
 
-A researcher triggers a gather run, which fetches RSS feeds for active sources and creates article instances for newly discovered URLs.
+A researcher triggers a discover run, which fetches RSS feeds for active sources and creates article instances for newly discovered URLs.
 
-### B.1 — Trigger gather
+### B.1 — Trigger discover
 
 ✅ **B.1.1**
 Given I am a researcher viewing a topic with at least one active source,
-When I click "Gather articles",
-Then the system fetches the RSS feed for each active source (using the configured lookback_days) and creates article instances with status `discovered` for any URLs not already present in the system.
+When I click "Discover",
+Then the system fetches the RSS feed for each active source (using the configured lookback_days) and creates article instances for any URLs not already present in the system.
+
+If the RSS item includes a `<content:encoded>` or `<description>` block with ≥ 150 words of usable text, the article is created with status `fetched` and `full_text` pre-populated from the RSS content — the Gather step is skipped for that article. Articles without sufficient RSS content are created with status `discovered` and require a separate Gather step.
 
 ⚠️ **B.1.2**
-Given a gather run is in progress,
+Given a discover run is in progress,
 When the run completes,
-Then I see a summary: N new articles discovered from M sources, with a link to view the newly discovered articles.
+Then I see a summary: N new articles discovered from M sources.
 
-> Deviation: summary shows total new article count but no direct link to the discovered filter. Minor — link to `/articles?status=discovered` not yet added to gather result.
+> Deviation: summary shows total new article count but no per-source breakdown in the UI. Per-source results (including errors) are returned in the API response but not surfaced to the user.
 
 ✅ **B.1.3**
 Given a URL already exists in the system (any status),
-When a gather run encounters the same URL,
+When a discover run encounters the same URL,
 Then no duplicate article is created — the existing article is not modified.
 
 ✅ **B.1.4**
 Given an active source's RSS feed is unreachable,
-When a gather run encounters that source,
-Then the error is surfaced in the gather summary and the source continues to be active — it is not automatically paused.
+When a discover run encounters that source,
+Then the error is recorded per-source and the source continues to be active — it is not automatically paused.
 
 ### B.2 — View discovered articles
 
@@ -97,91 +105,123 @@ Given articles have been discovered,
 When I view the article queue filtered to `discovered`,
 Then I see each article's title, source, published date, and perspective.
 
+✅ **B.2.2**
+Given a discovered article has a `fetchError` in its data (from a previous failed gather attempt),
+When I view the article card,
+Then the error message is visible on the card so the researcher understands why gather did not advance it.
+
 ---
 
-## Section C — Article Fetch
+## Section C — Article Gather
 
 A researcher reviews discovered articles and triggers content retrieval for those worth reading.
 
-### C.1 — Fetch a single article
+> Note: Articles that arrive with RSS content (≥ 150 words) at Discover time are already in `fetched` status and skip this section.
+
+### C.1 — Gather a single article
 
 ✅ **C.1.1**
 Given an article with status `discovered`,
-When I click "Fetch" on that article,
+When I click "Gather" on that article,
 Then the system retrieves the article content, populates `word_count`, `access_level`, and `full_text`, and advances the article status to `fetched`.
+
+If the fetched content is fewer than 150 words (thin content — likely paywalled or blocked), the article remains in `discovered` with a `fetchError` noting the word count, and the researcher can mark it paywalled or try again later.
 
 ✅ **C.1.2**
 Given an article fetch completes successfully,
 When I view the article,
-Then I can see the word count and a preview of the article content.
+Then I can see the word count and access level.
 
 ### C.2 — Handle paywall and failures
 
 ✅ **C.2.1**
 Given an article with status `discovered` or `fetched`,
 When I click "Mark as paywalled",
-Then the article status changes to `paywalled` (terminal) and it is removed from the active fetch queue.
+Then the article status changes to `paywalled` (terminal) and it is removed from the active gather queue.
 
-⚠️ **C.2.2**
-Given an article fetch fails (connection error, 404, etc.),
+✅ **C.2.2**
+Given an article gather fails (connection error, 404, thin content, etc.),
 When the failure is detected,
-Then the article remains in `discovered` status, the error reason is surfaced in the article detail, and I can retry or mark it as failed.
-
-> Deviation: current implementation auto-advances to `failed` on fetch error rather than remaining in `discovered`. Error reason is not surfaced in the article card. Spec intent was to let the researcher decide. To fix: catch the error, leave status as `discovered`, store error message in data JSONB, surface in UI.
+Then the article remains in `discovered` status, a `fetchError` is stored in `data` JSONB with the reason, and the error is surfaced on the article card. The researcher can retry or mark it paywalled.
 
 ✅ **C.2.3**
-Given I have reviewed a failed fetch attempt,
+Given I have reviewed a failed gather attempt,
 When I click "Mark as failed",
-Then the article status changes to `failed` (terminal) and it is removed from the active fetch queue.
+Then the article status changes to `failed` (terminal) and it is removed from the active gather queue.
 
-### C.3 — Batch fetch
+### C.3 — Batch gather
 
-🟠 **C.3.1** — *Awaiting UI design (to be supplied via claude-design URL). Do not implement until design is provided.*
+✅ **C.3.1 — Bulk gather all**
+Given articles with status `discovered` exist,
+When I click "Gather all N" on the dashboard,
+Then each discovered article is fetched in sequence. Articles with sufficient content advance to `fetched`. Articles with thin content or fetch errors stay in `discovered` with `fetchError` recorded. A summary shows N gathered, M failed.
+
+🟠 **C.3.2** — *Awaiting UI design.*
 Given multiple articles with status `discovered`,
-When I select a set of articles and click "Fetch selected",
-Then the system fetches each selected article in sequence and updates statuses accordingly. A progress indicator shows N of M completed.
+When I select a set and click "Gather selected",
+Then the system gathers each selected article and updates statuses accordingly.
 
 ---
 
-## Section D — Article Processing
+## Section D — Article Analyse
 
-A researcher triggers LLM analysis on fetched articles to extract insights.
+A researcher triggers LLM analysis on gathered articles to extract insights.
 
-### D.1 — Process a single article
+### D.1 — Analyse a single article
 
 ✅ **D.1.1**
 Given an article with status `fetched`,
-When I click "Process" on that article,
-Then the system sends the article content to the Claude API with the configured insight extraction prompt and creates insight instances with status `extracted` for each insight returned.
+When I click "Analyse" on that article,
+Then the system sends the article content to the Claude API with the insight extraction prompt and creates insight instances with status `extracted` for each insight returned.
 
 ✅ **D.1.2**
-Given processing completes,
+Given analysis completes,
 When I view the article,
-Then the article status has advanced to `processed`, the `executive_summary` and `tags` fields are populated, and I can see the count of insights extracted.
+Then the article status has advanced to `processed`, the `executive_summary` and `tags` fields are populated, and the insight count is visible.
 
 ✅ **D.1.3**
-Given processing is complete,
+Given analysis is complete,
 When I navigate to the insights view filtered to this article,
 Then I see each insight's text, quote, and tags.
 
-### D.2 — Processing constraints
+### D.2 — Analysis constraints
 
 ✅ **D.2.1**
-Given an article with status `discovered` (not yet fetched),
-When I attempt to process it,
-Then the "Process" action is not available — the article must be fetched first.
+Given an article with status `discovered` (not yet gathered),
+When I attempt to analyse it,
+Then the "Analyse" action is not available — the article must be gathered first.
 
 ❌ **D.2.2**
-Given an article that has already been processed,
-When I attempt to process it again,
-Then a confirmation is shown: re-processing will add new insights but will not delete existing ones.
+Given an article that has already been analysed (`processed`),
+When I attempt to analyse it again,
+Then a confirmation is shown: re-analysing will add new insights but will not delete existing ones.
 
-### D.3 — Batch process
+### D.3 — Batch analyse
 
-🟠 **D.3.1** — *Awaiting UI design (same design as C.3.1 — to be supplied via claude-design URL).*
+✅ **D.3.1 — Bulk analyse all (new)**
+Given articles with status `fetched` and no prior `analyseError` exist,
+When I click "Analyse N new" on the dashboard,
+Then each article is sent to the Claude API in sequence. Successfully analysed articles advance to `processed`. Failed articles remain in `fetched` with `analyseError` recorded in `data` JSONB. The dashboard updates to show "Retry M" for previously failed articles.
+
+✅ **D.3.2 — Retry failed analyses**
+Given articles with status `fetched` and an `analyseError` in `data` exist,
+When I click "Retry M" on the dashboard,
+Then the same bulk analysis runs for those articles. On success, `analyseError` is cleared and status advances to `processed`. On continued failure, the error is updated.
+
+✅ **D.3.3 — Distinguish new from retries**
+Given the dashboard shows gathered articles awaiting analysis,
+When there is a mix of newly gathered articles (no prior attempt) and previously failed articles,
+Then the dashboard shows two separate action buttons: "Analyse N new" and "Retry M" — so the researcher can see at a glance how many are first-time vs re-attempts.
+
+✅ **D.3.4 — Analyse error surfacing**
+Given an article has a recorded `analyseError`,
+When I view the article card,
+Then the error message is visible (amber colour, distinct from the red `fetchError`) so I understand why analysis has not yet succeeded.
+
+🟠 **D.3.5** — *Awaiting UI design.*
 Given multiple articles with status `fetched`,
-When I select a set and click "Process selected",
-Then each article is processed in sequence and a progress indicator is shown.
+When I select a set and click "Analyse selected",
+Then each article is analysed in sequence with progress indication.
 
 ---
 
@@ -254,10 +294,10 @@ Then all curated insights are shown and the filter UI resets.
 
 ### F.3 — Trends
 
-🟠 **F.3.1** — *Awaiting UI design (to be supplied via claude-design URL). Do not implement until design is provided.*
-Given curated insights exist across multiple gather runs,
+🟠 **F.3.1** — *Awaiting UI design. Do not implement until design is provided.*
+Given curated insights exist across multiple discover runs,
 When I view the trends panel,
-Then I see tag frequency over time (how many insights per tag per run).
+Then I see tag frequency over time.
 
 ---
 
@@ -273,7 +313,7 @@ Then I can view the digest (Section F) only — the article queue, insight curat
 ✅ **G.1.2**
 Given I am a researcher,
 When I switch to "reader view" using the role toggle in the sidebar,
-Then I see only the digest — the same view a reader would see — without having to log out.
+Then I see only the digest — without having to log out.
 
 ---
 
@@ -281,13 +321,12 @@ Then I see only the digest — the same view a reader would see — without havi
 
 | ID | Type | Description |
 |----|------|-------------|
-| B.1.2 | ⚠️ Deviation | Gather summary missing link to discovered filter |
-| C.2.2 | ⚠️ Deviation | Fetch failure auto-advances to `failed` instead of staying `discovered` + surfacing error |
-| D.2.2 | ❌ Not built | Re-process confirmation dialog |
+| B.1.2 | ⚠️ Deviation | Discover summary shows total count only — no per-source breakdown in UI |
+| D.2.2 | ❌ Not built | Re-analyse confirmation dialog |
 | A.1.1/A.1.2 | ❌ Deferred | Topic create/archive UI (single-topic v1) |
-| C.3.1/D.3.1 | 🟠 Blocked | Batch fetch/process — awaiting UI design |
+| C.3.2/D.3.5 | 🟠 Blocked | Batch gather/analyse selected — awaiting UI design |
 | F.3.1 | 🟠 Blocked | Trends view — awaiting UI design |
-| A.1.3/E.2.1 | ⏸ Deferred | Hypothesis management, insight editing — teal-os extension candidates |
+| A.1.3/E.2.1 | ⏸ Deferred | Thread layer (separate spec), insight editing — teal-os extension candidates |
 
 ---
 
@@ -295,9 +334,11 @@ Then I see only the digest — the same view a reader would see — without havi
 
 | ID | Decision | Status |
 |----|----------|--------|
-| A.1.3 | Hypothesis management | ⏸ Deferred — teal-os extension candidate |
-| C.3.1 / D.3.1 | Batch fetch/process UX | 🟠 Awaiting UI design (claude-design URL) |
+| A.1.3 | Thread layer (research narratives) | ⏸ Separate spec — `specs/2026-05-27-hypothesis-layer/spec.md` |
+| C.3.2 / D.3.5 | Batch gather/analyse selected UX | 🟠 Awaiting UI design |
 | E.2.1 | Insight editing | ⏸ Deferred — teal-os extension candidate |
-| F.3.1 | Trends view | 🟠 Awaiting UI design (claude-design URL) |
+| F.3.1 | Trends view | 🟠 Awaiting UI design |
 | Blueprint | Full text storage | ✅ Resolved — dedicated `text` column (ADR-003) |
-| Blueprint | Multi-topic UI | ✅ Resolved — single topic for v1; major UX scope increase deferred |
+| Blueprint | Multi-topic UI | ✅ Resolved — single topic for v1 |
+| Blueprint | RSS content at discover | ✅ Resolved — `<content:encoded>` captured at discover time; articles with ≥ 150 words go straight to `fetched` |
+| Blueprint | Analyse error tracking | ✅ Resolved — `analyseError` in data JSONB; dashboard splits new vs retry |
