@@ -3,6 +3,7 @@ export type ArticleStatus = 'discovered' | 'fetched' | 'processed' | 'archived' 
 export type InsightStatus = 'extracted' | 'curated' | 'dismissed'
 export type TopicStatus = 'active' | 'archived'
 export type SourceStatus = 'active' | 'paused' | 'removed'
+export type NarrativeStatus = 'active' | 'archived' | 'resolved'
 
 export type Perspective = 'practitioner' | 'leadership' | 'product' | 'research' | 'editorial'
 export type Tier = '1' | '2'
@@ -46,8 +47,29 @@ export interface InsightInstance {
   quote: string
   tags: string[]
   perspective: Perspective
+  model: string | null
   createdAt: string
   updatedAt: string
+}
+
+export interface NarrativeInstance {
+  id: string
+  entityType: 'narrative'
+  topicId: string
+  title: string
+  description: string | null
+  status: NarrativeStatus
+  parentId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface NarrativeInsightInstance {
+  id: string
+  narrativeId: string
+  insightId: string
+  note: string | null
+  addedAt: string
 }
 
 export interface TopicInstance {

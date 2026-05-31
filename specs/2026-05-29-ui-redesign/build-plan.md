@@ -24,10 +24,10 @@
 
 | Step | Work | Agent | Parallel? |
 |---|---|---|---|
-| 1.1 | Create `src/lib/status-tokens.ts` — token map for all 14 status values | `[agent: entity-agent/article]` + `[agent: entity-agent/insight]` | — |
-| 1.2 | Add CSS custom properties to `src/app/globals.css` — colour + texture per status | `[agent: entity-agent/article]` | after 1.1 |
-| 1.3 | Create `src/components/ui/status-chip.tsx` | `[agent: api-agent]` | after 1.2 |
-| 1.4 | Replace inline status Tailwind combos in `articles/page.tsx`, `insights/page.tsx`, `dashboard/page.tsx` with `<StatusChip>` | `[agent: api-agent]` | after 1.3 |
+| 1.1 | ✅ Create `src/lib/status-tokens.ts` — token map for all 14 status values | `[agent: entity-agent/article]` + `[agent: entity-agent/insight]` | — |
+| 1.2 | ✅ Add CSS custom properties to `src/app/globals.css` — colour + texture per status | `[agent: entity-agent/article]` | after 1.1 |
+| 1.3 | ✅ Create `src/components/ui/status-chip.tsx` | `[agent: api-agent]` | after 1.2 |
+| 1.4 | ✅ Replace inline status Tailwind combos in `articles/page.tsx`, `insights/page.tsx`, `dashboard/page.tsx` with `<StatusChip>` | `[agent: api-agent]` | after 1.3 |
 
 *Manifests to read before coding: `.c4/entities/article.md`, `.c4/entities/insight.md`*
 
@@ -38,8 +38,8 @@
 
 | Step | Work | Agent | Parallel? |
 |---|---|---|---|
-| 2.1 | Resolve D1 (Topics nav target) | — | before 2.2 |
-| 2.2 | Rewrite `src/components/nav/sidebar.tsx` — brand cluster + grouped nav + inline role toggle | `[agent: cell-agent/ui]` | — |
+| 2.1 | ~~Resolve D1 (Topics nav target)~~ | — | **Resolved — Topics nav removed** |
+| 2.2 | ✅ Replace sidebar with `src/components/nav/top-nav.tsx` — brand cluster + grouped nav + role toggle left of links |  `[agent: cell-agent/ui]` | — |
 
 *Manifests to read: `.c4/cells/` (all)*
 
@@ -50,8 +50,8 @@
 
 | Step | Work | Agent | Parallel? |
 |---|---|---|---|
-| 3.1 | Create `src/components/ui/page-header.tsx` | `[agent: api-agent]` | parallel with Phase 2 |
-| 3.2 | Add PageHeader to `dashboard/page.tsx`, `articles/page.tsx`, `insights/page.tsx`, `digest/page.tsx` | `[agent: api-agent]` | after 3.1 |
+| 3.1 | ✅ Create `src/components/ui/page-header.tsx` | `[agent: api-agent]` | — |
+| 3.2 | ✅ Add PageHeader to `dashboard/page.tsx`, `articles/page.tsx`, `insights/page.tsx`, `digest/page.tsx` | `[agent: api-agent]` | — |
 
 ---
 
@@ -60,10 +60,10 @@
 
 | Step | Work | Agent | Parallel? |
 |---|---|---|---|
-| 4.1 | Resolve D2 (what dashboard becomes) | — | before 4.2 |
-| 4.2 | Create `src/app/gather/page.tsx` — source list + run gather button | `[agent: cell-agent/gather]` | — |
-| 4.3 | Move `DiscoverButton` to gather page; strip from dashboard | `[agent: cell-agent/gather]` | after 4.2 |
-| 4.4 | Update dashboard (`/dashboard`) — pipeline overview only, strip sources table | `[agent: cell-agent/gather]` | after 4.3 |
+| 4.1 | ~~Resolve D2~~ | — | **Resolved — dashboard keeps sources table + pipeline bar; BulkActions moves to article queue in Phase 5** |
+| 4.2 | ✅ Create `src/app/gather/page.tsx` — source list + run gather button | `[agent: cell-agent/gather]` | — |
+| 4.3 | ✅ Create `src/app/gather/gather-button.tsx`; DiscoverButton removed from dashboard | `[agent: cell-agent/gather]` | — |
+| 4.4 | ✅ Dashboard retains sources table + pipeline bar; BulkActions moved under pipeline section | `[agent: cell-agent/gather]` | — |
 
 *Manifests to read: `.c4/cells/gather.md` (if exists), `.c4/entities/source.md`*
 

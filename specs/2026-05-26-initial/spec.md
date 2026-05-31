@@ -57,7 +57,7 @@ When I click "Edit" on a source,
 Then an inline form appears pre-populated with the source's current name, feed URL, perspective, and tier,
 And I can update any of those fields and save — the slug and topic association are not editable.
 
-> Note: Edit source was added to fix incorrect feed URLs entered via Add Source (e.g. Substack profile URL vs RSS feed URL). PATCH `/api/sources/[id]` accepts name, feedUrl, perspective, tier, accessType in addition to status.
+> Note: Edit source was added to fix incorrect feed URLs entered via Add Source (e.g. Substack profile URL vs RSS feed URL). PATCH `/api/sources/[id]` accepts name, feedUrl, perspective, tier, accessType in addition to status. Known corrected sources: `dev-interrupted` feed URL updated to `https://devinterrupted.substack.com/feed` (was incorrectly set to the HTML archive URL).
 
 ### A.3 — Topic summary view
 
@@ -167,12 +167,14 @@ Then the system gathers each selected article and updates statuses accordingly.
 
 A researcher triggers LLM analysis on gathered articles to extract insights.
 
+The analysis backend is configurable via `LOCAL_LLM` env var: `false` (default) uses the Claude API (`claude-sonnet-4-6`); `true` uses a local Ollama instance (default model `qwen2.5:7b`, OpenAI-compat endpoint). The model and endpoint are overridable via `LOCAL_LLM_MODEL` and `LOCAL_LLM_ENDPOINT`. The API response includes a `backend` field (`'claude' | 'local'`) to confirm which ran.
+
 ### D.1 — Analyse a single article
 
 ✅ **D.1.1**
 Given an article with status `fetched`,
 When I click "Analyse" on that article,
-Then the system sends the article content to the Claude API with the insight extraction prompt and creates insight instances with status `extracted` for each insight returned.
+Then the system sends the article content to the configured LLM backend with the insight extraction prompt and creates insight instances with status `extracted` for each insight returned.
 
 ✅ **D.1.2**
 Given analysis completes,
@@ -183,6 +185,11 @@ Then the article status has advanced to `processed`, the `executive_summary` and
 Given analysis is complete,
 When I navigate to the insights view filtered to this article,
 Then I see each insight's text, quote, and tags.
+
+✅ **D.1.4 — Model tagging**
+Given analysis completes (via any backend),
+When insights are created,
+Then each insight records the model name that produced it in the `model` field (e.g. `claude-sonnet-4-6`, `qwen2.5:7b`) — so the provenance of every insight is traceable as backends change over time.
 
 ### D.2 — Analysis constraints
 
@@ -201,7 +208,7 @@ Then a confirmation is shown: re-analysing will add new insights but will not de
 ✅ **D.3.1 — Bulk analyse all (new)**
 Given articles with status `fetched` and no prior `analyseError` exist,
 When I click "Analyse N new" on the dashboard,
-Then each article is sent to the Claude API in sequence. Successfully analysed articles advance to `processed`. Failed articles remain in `fetched` with `analyseError` recorded in `data` JSONB. The dashboard updates to show "Retry M" for previously failed articles.
+Then each article is sent to the configured LLM backend in sequence. Successfully analysed articles advance to `processed`. Failed articles remain in `fetched` with `analyseError` recorded in `data` JSONB. The dashboard updates to show "Retry M" for previously failed articles.
 
 ✅ **D.3.2 — Retry failed analyses**
 Given articles with status `fetched` and an `analyseError` in `data` exist,

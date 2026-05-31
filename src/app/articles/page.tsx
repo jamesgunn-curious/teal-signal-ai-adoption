@@ -5,6 +5,7 @@ import type { ArticleStatus, ArticleData } from '@/lib/types'
 import { ArticleActions } from './article-actions'
 import { StatusChip } from '@/components/ui/status-chip'
 import { ARTICLE_TOKENS } from '@/lib/status-tokens'
+import { PageHeader } from '@/components/ui/page-header'
 
 const STATUS_ORDER: ArticleStatus[] = ['discovered', 'fetched', 'processed', 'archived', 'paywalled', 'failed']
 
@@ -33,21 +34,30 @@ export default async function ArticlesPage({
     return ai !== bi ? ai - bi : new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime()
   })
 
-  return (
-    <div className="p-8 max-w-5xl">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Articles</h1>
-        <span className="text-sm text-neutral-500">{sorted.length} articles</span>
-      </div>
+  const discovered = rows.filter(r => r.status === 'discovered').length
+  const fetched    = rows.filter(r => r.status === 'fetched').length
+  const processed  = rows.filter(r => r.status === 'processed').length
 
+  return (
+    <div className="max-w-5xl">
+      <PageHeader
+        crumbs={['Workflow', 'Article queue']}
+        stats={[
+          { n: discovered, label: 'discovered', accent: discovered > 0 },
+          { n: fetched,    label: 'gathered' },
+          { n: processed,  label: 'analysed' },
+        ]}
+      />
+
+      <div className="px-8 pb-8">
       <div className="flex gap-2 mb-6 flex-wrap">
         <a href="/articles" className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
           !filterStatus ? 'bg-[#00e05a] text-[#0a0a0a]' : 'bg-[#0f1a12] border border-[#00e05a22] text-[#00a040] hover:border-[#00e05a44]'
         }`}>All</a>
         {STATUS_ORDER.map(s => (
-          <a key={s} href={`/articles?status=${s}`} className={`px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wide transition-colors ${
-            filterStatus === s ? 'bg-[#00e05a] text-[#0a0a0a]' : 'bg-[#0f1a12] border border-[#00e05a22] text-[#00a040] hover:border-[#00e05a44]'
-          }`}>{STATUS_LABELS[s]}</a>
+          <a key={s} href={`/articles?status=${s}`} className={`transition-opacity ${filterStatus === s ? 'opacity-100 ring-1 ring-white/20 rounded-full' : 'opacity-60 hover:opacity-90'}`}>
+            <StatusChip status={s} label={ARTICLE_TOKENS[s].label} />
+          </a>
         ))}
       </div>
 
@@ -63,9 +73,7 @@ export default async function ArticlesPage({
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium uppercase tracking-wide ${STATUS_COLOURS[article.status as ArticleStatus]}`}>
-                        {STATUS_LABELS[article.status as ArticleStatus]}
-                      </span>
+                      <StatusChip status={article.status} />
                       <span className="text-xs text-neutral-400 capitalize">{data.perspective} · Tier {data.tier}</span>
                       <span className="text-xs text-neutral-400">{article.publishedDate}</span>
                       {data.wordCount && (
@@ -106,6 +114,7 @@ export default async function ArticlesPage({
           })}
         </div>
       )}
+      </div>
     </div>
   )
 }

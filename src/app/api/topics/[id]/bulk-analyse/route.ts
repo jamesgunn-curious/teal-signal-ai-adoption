@@ -1,12 +1,9 @@
 import { NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { db } from '@/db'
 import { articles, insights } from '@/db/schema'
 import { eq, and } from 'drizzle-orm'
 import type { ArticleData, Perspective } from '@/lib/types'
 import { randomUUID } from 'crypto'
-
-const client = new Anthropic()
 
 const TOPIC_TAGS = [
   'right-problem', 'prioritisation', 'differentiation',
@@ -16,32 +13,59 @@ const TOPIC_TAGS = [
   'success-story', 'failure', 'cautionary-tale', 'research', 'early-adopter',
 ]
 
-async function extractInsights(fullText: string) {
-  const message = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 2048,
-    messages: [{
-      role: 'user',
-      content: `Extract structured insights from this article about AI adoption. Respond with valid JSON only, no markdown:
+const ANALYSE_PROMPT = (fullText: string) =>
+  `Extract structured insights from this article about AI adoption. Respond with valid JSON only, no markdown:
 {"executiveSummary":"2-sentence summary","tags":["tag1"],"insights":[{"text":"observation","quote":"direct quote","tags":["tag1"]}]}
 Available tags: ${TOPIC_TAGS.join(', ')}
 Extract 2-5 insights. Tags must come from the available list only.
-<article>${fullText.slice(0, 8000)}</article>`,
-    }],
+<article>${fullText.slice(0, 8000)}</article>`
+
+type InsightResult = {
+  executiveSummary: string
+  tags: string[]
+  insights: { text: string; quote: string; tags: string[] }[]
+}
+
+async function extractInsightsClaude(fullText: string): Promise<InsightResult> {
+  const { default: Anthropic } = await import('@anthropic-ai/sdk')
+  const client = new Anthropic()
+  const message = await client.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 2048,
+    messages: [{ role: 'user', content: ANALYSE_PROMPT(fullText) }],
   })
   const content = message.content[0]
-  if (content.type !== 'text') throw new Error('Unexpected response')
-  return JSON.parse(content.text) as {
-    executiveSummary: string
-    tags: string[]
-    insights: { text: string; quote: string; tags: string[] }[]
-  }
+  if (content.type !== 'text') throw new Error('Unexpected response type')
+  return JSON.parse(content.text) as InsightResult
+}
+
+async function extractInsightsLocal(fullText: string): Promise<InsightResult> {
+  const model = process.env.LOCAL_LLM_MODEL ?? 'qwen2.5:7b'
+  const endpoint = process.env.LOCAL_LLM_ENDPOINT ?? 'http://localhost:11434/v1/chat/completions'
+
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: 'user', content: ANALYSE_PROMPT(fullText) }],
+      format: 'json',
+    }),
+    signal: AbortSignal.timeout(120_000),
+  })
+
+  if (!res.ok) throw new Error(`Ollama request failed: ${res.status}`)
+  const data = await res.json() as { choices: { message: { content: string } }[] }
+  return JSON.parse(data.choices[0].message.content) as InsightResult
 }
 
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: topicId } = await params
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  const useLocal = process.env.LOCAL_LLM === 'true'
+  const extractInsights = useLocal ? extractInsightsLocal : extractInsightsClaude
+  const modelName = useLocal ? (process.env.LOCAL_LLM_MODEL ?? 'qwen2.5:7b') : 'claude-sonnet-4-6'
+  if (!useLocal && !process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured' }, { status: 503 })
   }
 
@@ -71,7 +95,6 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
     try {
       const result = await extractInsights(article.fullText)
-      // Clear any previous analyseError on success
       const { analyseError: _removed, ...cleanData } = existingData
       await db.update(articles)
         .set({
@@ -89,11 +112,11 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
           quote: ins.quote,
           tags: ins.tags,
           perspective: existingData.perspective as Perspective,
+          model: modelName,
         }).onConflictDoNothing()
       ))
       processed++
     } catch (err) {
-      // Record the error so the dashboard can distinguish retries from new articles
       await db.update(articles)
         .set({
           data: { ...existingData, analyseError: err instanceof Error ? err.message : 'analysis failed' },
@@ -104,5 +127,5 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     }
   }
 
-  return NextResponse.json({ processed, failed, skipped })
+  return NextResponse.json({ processed, failed, skipped, backend: useLocal ? 'local' : 'claude' })
 }

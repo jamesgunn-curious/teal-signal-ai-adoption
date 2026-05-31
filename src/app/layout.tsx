@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import { Sidebar } from '@/components/nav/sidebar'
+import { NavWrapper } from '@/components/nav/nav-wrapper'
 
 export const metadata: Metadata = {
   title: 'Signal Digest — AI Adoption',
@@ -20,9 +20,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-full antialiased" style={{fontFamily:"'Figtree',sans-serif"}}>
-        <div className="flex min-h-screen">
-          <Sidebar />
-          <main className="flex-1 min-w-0">{children}</main>
+        <div className="flex flex-col min-h-screen">
+          <NavWrapper />
+          <main className="flex-1">{children}</main>
         </div>
       </body>
     </html>

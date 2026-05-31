@@ -61,7 +61,7 @@ The primary workflow entity. Moves through gather → fetch → process stages, 
 | `executive_summary` | string | analyse step | 2-sentence LLM summary |
 | `tags` | string[] | analyse step | From topic tag vocabulary |
 | `fetch_error` | string? | gather step | Set when gather fails or content is thin; article stays `discovered` |
-| `analyse_error` | string? | analyse step | Set when Claude API call fails; article stays `fetched` for retry; cleared on success |
+| `analyse_error` | string? | analyse step | Set when LLM backend call fails; article stays `fetched` for retry; cleared on success |
 | `full_text` | — | — | Stored as dedicated `text` column (not in JSONB) — see ADR-003 |
 
 **States**: `discovered` → `fetched` → `processed` → `archived` + `paywalled` | `failed` (terminal)
@@ -85,6 +85,7 @@ Extracted from a processed article. Has its own curation lifecycle.
 | `quote` | text | Direct supporting quote from the article |
 | `tags` | string[] | From topic tag vocabulary |
 | `perspective` | enum | Inherited from source; may be overridden |
+| `model` | string? | LLM model that produced the insight, e.g. `claude-sonnet-4-6`, `qwen2.5:7b` |
 | `created_at` | timestamp | — |
 | `updated_at` | timestamp | — |
 
@@ -268,7 +269,7 @@ interface InsightInstance {
 | Database | PostgreSQL | Local: `localhost:5432/signal_ai_adoption` |
 | UI components | shadcn/ui + Tailwind CSS | |
 | State | Zustand | Client-only — server state via server actions |
-| AI | Claude API (Anthropic SDK) | Used in Step 9: process action |
+| AI | Configurable LLM backend | Default: Claude API (`claude-sonnet-4-6`). Local: Ollama (`qwen2.5:7b`) via `LOCAL_LLM=true`. See structural decision below. |
 
 Next.js version: read from `node_modules/next/dist/docs/` before writing any Next.js code — see AGENTS.md.
 
@@ -284,6 +285,9 @@ Single topic (`ai-adoption`) for v1. Multi-topic is a major UX scope addition. D
 
 ✅ **RSS content extraction at Discover** — Resolved 2026-05-28.
 The Discover route extracts `<content:encoded>` (preferring it) or `<description>` from each RSS item. If the resulting plain text is ≥ 150 words, the article is created as `fetched` with `full_text` already set — the Gather step is skipped. This is critical for newsletter platforms (Substack, etc.) that render their article pages client-side and cannot be scraped via plain HTTP fetch. Free articles typically yield full text; paywalled articles yield a teaser (usually sufficient for analysis).
+
+✅ **Configurable LLM backend for analysis** — Resolved 2026-05-31.
+Both the single-article analyse (`POST /api/articles/[id]/process`) and bulk-analyse (`POST /api/topics/[id]/bulk-analyse`) routes read `LOCAL_LLM` from env at request time. `LOCAL_LLM=false` (default) uses the Claude API (`claude-sonnet-4-6`). `LOCAL_LLM=true` calls a local Ollama instance using the OpenAI-compatible endpoint (`/v1/chat/completions`). Model defaults to `qwen2.5:7b`; overridable via `LOCAL_LLM_MODEL`. Endpoint defaults to `http://localhost:11434/v1/chat/completions`; overridable via `LOCAL_LLM_ENDPOINT`. Both routes return a `backend` field (`'claude' | 'local'`) in their response. Insights are tagged with the producing model name in the `model` column. Motivation: efficiency — local inference avoids API cost for regular pipeline runs; Claude remains available as a fallback for higher-quality analysis when needed.
 
 ✅ **Analyse error tracking** — Resolved 2026-05-28.
 When bulk-analyse encounters a Claude API failure, `analyseError` is written to the article's `data` JSONB and the article remains in `fetched` status. On the next successful analysis, `analyseError` is cleared. The dashboard distinguishes new `fetched` articles (no prior attempt) from retry candidates (have `analyseError`) and shows separate "Analyse N new" and "Retry M" buttons. Error messages are surfaced on article cards.

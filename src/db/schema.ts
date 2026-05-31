@@ -48,6 +48,28 @@ export const insights = pgTable('insights', {
   quote: text('quote').notNull(),
   tags: text('tags').array().notNull().default([]),
   perspective: text('perspective').notNull(), // Perspective — inherited from source
+  model: text('model'), // model that produced this insight e.g. 'claude-sonnet-4-6', 'qwen2.5:7b'
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
+// Narratives — researcher-curated threads tracked across gather runs
+export const narratives = pgTable('narratives', {
+  id: text('id').primaryKey(), // UUID
+  topicId: text('topic_id').notNull().references(() => topics.id),
+  title: text('title').notNull(),
+  description: text('description'),
+  status: text('status').notNull().default('active'), // 'active' | 'archived' | 'resolved'
+  parentId: text('parent_id'), // set on split/converge — references narratives.id
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
+// Junction: insights attached to narratives, with optional researcher note
+export const narrativeInsights = pgTable('narrative_insights', {
+  id: text('id').primaryKey(), // UUID
+  narrativeId: text('narrative_id').notNull().references(() => narratives.id),
+  insightId: text('insight_id').notNull().references(() => insights.id),
+  note: text('note'), // researcher's annotation
+  addedAt: timestamp('added_at').notNull().defaultNow(),
 })

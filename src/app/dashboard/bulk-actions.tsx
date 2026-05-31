@@ -44,7 +44,7 @@ export function BulkActions({ topicId, discoveredCount, gatheredCount, retryCoun
           disabled={loading !== null}
           className="px-3 py-1.5 border border-amber-800 text-amber-400 bg-amber-950 text-xs rounded hover:bg-amber-900 disabled:opacity-50 transition-colors"
         >
-          {loading === 'gather' ? 'Gathering…' : `Gather all ${discoveredCount}`}
+          {loading === 'gather' ? 'Gathering…' : `Gather ${discoveredCount}`}
         </button>
       )}
       {newToAnalyse > 0 && (

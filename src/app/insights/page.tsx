@@ -1,8 +1,11 @@
 import { db } from '@/db'
 import { insights, articles } from '@/db/schema'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, sql } from 'drizzle-orm'
 import type { InsightStatus, Perspective } from '@/lib/types'
 import { InsightActions } from './insight-actions'
+import { StatusChip } from '@/components/ui/status-chip'
+import { INSIGHT_TOKENS } from '@/lib/status-tokens'
+import { PageHeader } from '@/components/ui/page-header'
 
 const PERSPECTIVE_COLOURS: Record<Perspective, string> = {
   practitioner: 'bg-blue-950 border border-blue-800 text-blue-400',
@@ -38,37 +41,47 @@ export default async function InsightsPage({
   const conditions = [eq(insights.status, activeStatus)]
   if (articleId) conditions.push(eq(insights.articleId, articleId))
 
-  const rows = await db
-    .select({ insight: insights, articleData: articles.data })
-    .from(insights)
-    .innerJoin(articles, eq(insights.articleId, articles.id))
-    .where(and(...conditions))
+  const [rows, counts] = await Promise.all([
+    db.select({ insight: insights, articleData: articles.data })
+      .from(insights)
+      .innerJoin(articles, eq(insights.articleId, articles.id))
+      .where(and(...conditions)),
+    db.select({ status: insights.status, count: sql<number>`count(*)::int` })
+      .from(insights)
+      .groupBy(insights.status),
+  ])
+
+  const countMap = Object.fromEntries(counts.map(r => [r.status, r.count]))
+  const extracted = countMap['extracted'] ?? 0
+  const curated   = countMap['curated']   ?? 0
+  const dismissed = countMap['dismissed'] ?? 0
 
   return (
-    <div className="p-8 max-w-4xl">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold">Insights</h1>
-          {articleId && (
-            <p className="text-xs text-neutral-400 mt-1">
-              Filtered to one article ·{' '}
-              <a href="/insights" className="underline hover:text-neutral-600">Clear</a>
-            </p>
-          )}
-        </div>
-        <span className="text-sm text-neutral-500">{rows.length} {activeStatus}</span>
-      </div>
+    <div className="max-w-4xl">
+      <PageHeader
+        crumbs={['Workflow', 'Review']}
+        stats={[
+          { n: extracted, label: 'to review', accent: extracted > 0 },
+          { n: curated,   label: 'curated' },
+          { n: dismissed, label: 'dismissed' },
+        ]}
+      />
+      <div className="px-8 pb-8">
+      {articleId && (
+        <p className="text-xs text-[#006025] mb-4">
+          Filtered to one article ·{' '}
+          <a href="/insights" className="underline hover:text-[#00a040]">Clear</a>
+        </p>
+      )}
 
       <div className="flex gap-2 mb-6">
         {(['extracted', 'curated', 'dismissed'] as InsightStatus[]).map(s => (
           <a
             key={s}
             href={articleId ? `/insights?status=${s}&articleId=${articleId}` : `/insights?status=${s}`}
-            className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-colors ${
-              activeStatus === s ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-            }`}
+            className={`transition-opacity ${activeStatus === s ? 'opacity-100 ring-1 ring-white/20 rounded-full' : 'opacity-60 hover:opacity-90'}`}
           >
-            {s}
+            <StatusChip status={s} label={INSIGHT_TOKENS[s].label} />
           </a>
         ))}
       </div>
@@ -114,6 +127,7 @@ export default async function InsightsPage({
           })}
         </div>
       )}
+      </div>
     </div>
   )
 }
