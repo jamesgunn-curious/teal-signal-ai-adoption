@@ -80,12 +80,12 @@ Each pill shows the count for that status.
 ## Implementation steps
 
 ### Step 1 — New `/pipeline` route
-❌ Create `src/app/pipeline/page.tsx` as a server component
+✅ Create `src/app/pipeline/page.tsx` as a server component
 - Fetches: sources, article status counts, pipeline stats (all in one data call)
 - Renders: PageHeader + PipelineBar + SourcesSection + ArticleQueue
 
 ### Step 2 — PipelineBar component
-❌ Create `src/components/pipeline/pipeline-bar.tsx` (client component)
+✅ Create `src/components/pipeline/pipeline-bar.tsx` (client component)
 - Renders the three-step flow with counts and action buttons
 - Discover button calls gather API
 - Gather N / Analyse N call bulk APIs
@@ -93,37 +93,78 @@ Each pill shows the count for that status.
 - Shows "last run: —" stat (not yet stored; show "—" for now ⏸)
 
 ### Step 3 — SourcesSection component
-❌ Create `src/components/pipeline/sources-section.tsx` (client component)
+✅ Create `src/components/pipeline/sources-section.tsx` (client component)
 - Collapsed by default, expand/collapse via local state
 - When expanded: renders existing per-source rows with StatusChip + SourceActions
 - `+ Add source` always visible (uses existing AddSourceForm)
 
 ### Step 4 — Unified ArticleQueue
-❌ Extract article list + filter pills from `src/app/articles/page.tsx` into a reusable component
+✅ Extract article list + filter pills from `src/app/articles/page.tsx` into a reusable component
 - `src/components/pipeline/article-queue.tsx`
 - Accepts pre-fetched articles + counts (no own data fetch)
 - Renders filter pills + article rows + per-row ArticleActions
 
 ### Step 5 — Nav update
-❌ Update `src/components/nav/top-nav.tsx` — replace 4 tabs with single `Pipeline` tab at `/pipeline`
-❌ Update `src/components/nav/nav-wrapper.tsx` — Pipeline tab badge = discovered + fetched count
-❌ Redirect `/dashboard`, `/gather`, `/articles` → `/pipeline` (or leave as aliases)
+✅ Update `src/components/nav/top-nav.tsx` — replace 4 tabs with single `Pipeline` tab at `/pipeline`
+✅ Update `src/components/nav/nav-wrapper.tsx` — Pipeline tab badge = discovered + fetched count
+✅ Redirect `/dashboard`, `/gather`, `/articles` → `/pipeline` (D4 resolved: redirect)
 
 ### Step 6 — Move BulkActions off dashboard
-❌ Remove `BulkActions` component from `src/app/dashboard/page.tsx`
-❌ Gather N and Analyse N live in PipelineBar only
+✅ Remove `BulkActions` component from `src/app/dashboard/page.tsx`
+✅ Gather N and Analyse N live in PipelineBar only
 
 ---
 
 ## Open decisions
 
-🟠 **D4 — What happens to `/dashboard`, `/gather`, `/articles` URLs?**
-Options: (a) redirect to `/pipeline`, (b) keep as aliases, (c) 404
-Recommend: (a) redirect — keeps URLs clean, no dead routes
+✅ **D4 — What happens to `/dashboard`, `/gather`, `/articles` URLs?**
+Resolved: redirect all → `/pipeline`.
 
-🟠 **D5 — Last run timestamp**
-The discover step doesn't currently record when it last ran. The pipeline bar shows "last run: —". Options: (a) add `lastGatheredAt` to topics table, (b) infer from most recent article `createdAt`, (c) leave as "—" for now.
-Recommend: (b) for now — no schema change needed, reasonable approximation.
+✅ **D5 — Last run timestamp**
+Resolved: infer from most recent article `createdAt` — no schema change, reasonable approximation.
+
+---
+
+---
+
+## Phase 2 — Sequential analyse queue with timing
+
+**Date added:** 2026-06-01
+
+### Problem
+
+`POST /api/topics/[id]/bulk-analyse` processes all articles in a single HTTP round-trip. With a local LLM (Ollama), each article takes 30–120s — the request times out before all articles complete, and there is no progress visibility or retry affordance.
+
+### Behaviour
+
+- ✅ Bulk Analyse processes articles one at a time, sequentially, from the client (UI-driven queue)
+- ✅ Each article calls `POST /api/articles/[id]/process` independently — no long-running bulk HTTP request
+- ✅ Progress shown inline in pipeline bar: `Analysing 3/12` (updating per article)
+- ✅ If an article fails, the count increments and the queue continues to the next article
+- ✅ Articles with `analyseError` from prior runs are included in the queue (they remain `fetched`) — retry is automatic
+- ✅ Per-article timing: `analyseStartedAt`, `analyseCompletedAt` stored in `article.data` JSONB (reference); `analyseDurationMs` stored in dedicated integer column (see ADR-007)
+- ✅ `word_count` promoted to dedicated integer column (see ADR-007)
+- ✅ On success, `analyseError` is cleared from article data
+- ✅ Duration and word count shown in article queue row
+
+### Timeout architecture (ADR-007 context)
+
+Local LLM timeout is **dynamic**, computed per article from its `word_count` column before the Ollama call:
+
+```
+timeout = min(ceiling, max(120s, wordCount × 400ms))
+```
+
+- Empirical basis: 140 words → 47s ≈ 336ms/word; 400ms/word adds headroom
+- Minimum: 120s (covers model cold-start + short articles)
+- Default ceiling: 600s (10 min) — covers articles up to ~1500 words comfortably
+- Ceiling override: `LOCAL_LLM_TIMEOUT_MS` env var
+
+This is sufficient at research-pipeline scale (single topic, hundreds of articles, sequential processing). If parallel processing or larger corpora are introduced, revisit with a proper job-queue (e.g. pg-boss or BullMQ backed by Postgres).
+
+### Per-article retry
+
+The per-article `Analyse` button in the article queue already works as a retry affordance — `fetched` articles with `analyseError` show the button. No additional UI change needed for single-article retry.
 
 ---
 

@@ -56,6 +56,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     // Thin content — likely paywalled or blocked. Stay in discovered (spec C.2.2)
     const [updated] = await db.update(articles)
       .set({
+        wordCount: fetchResult.wordCount,
         data: { ...existingData, fetchError: `thin content (${fetchResult.wordCount} words)`, accessLevel: fetchResult.accessLevel },
         updatedAt: new Date(),
       })
@@ -64,9 +65,9 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ article: updated, error: 'thin content' }, { status: 200 })
   }
 
+  const { wordCount: _removed, ...cleanData } = existingData as ArticleData & { wordCount?: number }
   const updatedData: ArticleData = {
-    ...existingData,
-    wordCount: fetchResult.wordCount,
+    ...cleanData,
     accessLevel: fetchResult.accessLevel,
   }
 
@@ -74,6 +75,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     .set({
       status: 'fetched',
       fullText: fetchResult.fullText,
+      wordCount: fetchResult.wordCount,
       data: updatedData,
       updatedAt: new Date(),
     })

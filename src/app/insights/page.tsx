@@ -1,5 +1,5 @@
 import { db } from '@/db'
-import { insights, articles } from '@/db/schema'
+import { insights, articles, narratives, narrativeInsights } from '@/db/schema'
 import { eq, and, sql } from 'drizzle-orm'
 import type { InsightStatus, Perspective } from '@/lib/types'
 import { InsightActions } from './insight-actions'
@@ -41,7 +41,7 @@ export default async function InsightsPage({
   const conditions = [eq(insights.status, activeStatus)]
   if (articleId) conditions.push(eq(insights.articleId, articleId))
 
-  const [rows, counts] = await Promise.all([
+  const [rows, counts, narrativeLinks] = await Promise.all([
     db.select({ insight: insights, articleData: articles.data })
       .from(insights)
       .innerJoin(articles, eq(insights.articleId, articles.id))
@@ -49,7 +49,23 @@ export default async function InsightsPage({
     db.select({ status: insights.status, count: sql<number>`count(*)::int` })
       .from(insights)
       .groupBy(insights.status),
+    activeStatus === 'curated'
+      ? db.select({
+          insightId: narrativeInsights.insightId,
+          narrativeId: narrativeInsights.narrativeId,
+          narrativeTitle: narratives.title,
+        })
+        .from(narrativeInsights)
+        .innerJoin(narratives, eq(narrativeInsights.narrativeId, narratives.id))
+      : Promise.resolve([]),
   ])
+
+  const narrativeMap = new Map<string, { id: string; title: string }[]>()
+  for (const link of narrativeLinks) {
+    const existing = narrativeMap.get(link.insightId) ?? []
+    existing.push({ id: link.narrativeId, title: link.narrativeTitle })
+    narrativeMap.set(link.insightId, existing)
+  }
 
   const countMap = Object.fromEntries(counts.map(r => [r.status, r.count]))
   const extracted = countMap['extracted'] ?? 0
@@ -111,6 +127,16 @@ export default async function InsightsPage({
                         <span className="text-xs text-neutral-400 italic">→ {section}</span>
                       )}
                     </div>
+                    {activeStatus === 'curated' && (narrativeMap.get(insight.id) ?? []).length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-1 mb-2">
+                        {(narrativeMap.get(insight.id) ?? []).map(n => (
+                          <a key={n.id} href={`/narratives/${n.id}`}
+                            className="text-xs px-2 py-0.5 rounded-full border border-[#00e05a44] text-[#00a040] hover:bg-[#0f1a12] transition-colors">
+                            {n.title}
+                          </a>
+                        ))}
+                      </div>
+                    )}
                     <p className="text-sm text-neutral-900 leading-relaxed">{insight.text}</p>
                     {insight.quote && (
                       <blockquote className="mt-2 pl-3 border-l-2 border-[#00e05a33] text-xs text-[#00a040] italic line-clamp-2">

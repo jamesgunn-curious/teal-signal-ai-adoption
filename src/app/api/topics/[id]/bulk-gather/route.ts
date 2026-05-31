@@ -41,17 +41,20 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
         // Thin content — likely paywalled or blocked. Stay in discovered with error note.
         await db.update(articles)
           .set({
+            wordCount: result.wordCount,
             data: { ...existingData, fetchError: `thin content (${result.wordCount} words)`, accessLevel: result.accessLevel },
             updatedAt: new Date(),
           })
           .where(eq(articles.id, article.id))
         failed++
       } else {
+        const { wordCount: _removed, ...cleanData } = existingData as ArticleData & { wordCount?: number }
         await db.update(articles)
           .set({
             status: 'fetched',
             fullText: result.fullText,
-            data: { ...existingData, wordCount: result.wordCount, accessLevel: result.accessLevel },
+            wordCount: result.wordCount,
+            data: { ...cleanData, accessLevel: result.accessLevel },
             updatedAt: new Date(),
           })
           .where(eq(articles.id, article.id))

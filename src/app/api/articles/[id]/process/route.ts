@@ -58,7 +58,13 @@ async function extractInsightsClaude(fullText: string): Promise<ProcessResult> {
   return JSON.parse(content.text) as ProcessResult
 }
 
-async function extractInsightsLocal(fullText: string): Promise<ProcessResult> {
+// Dynamic timeout: 400ms per word, min 2 min, ceiling from LOCAL_LLM_TIMEOUT_MS (default 10 min)
+function localTimeoutMs(wordCount: number | null): number {
+  const ceiling = parseInt(process.env.LOCAL_LLM_TIMEOUT_MS ?? '600000', 10)
+  return Math.min(ceiling, Math.max(120_000, (wordCount ?? 500) * 400))
+}
+
+async function extractInsightsLocal(fullText: string, wordCount: number | null): Promise<ProcessResult> {
   const model = process.env.LOCAL_LLM_MODEL ?? 'qwen2.5:7b'
   const endpoint = process.env.LOCAL_LLM_ENDPOINT ?? 'http://localhost:11434/v1/chat/completions'
   const res = await fetch(endpoint, {
@@ -69,7 +75,7 @@ async function extractInsightsLocal(fullText: string): Promise<ProcessResult> {
       messages: [{ role: 'user', content: ANALYSE_PROMPT(fullText) }],
       format: 'json',
     }),
-    signal: AbortSignal.timeout(120_000),
+    signal: AbortSignal.timeout(localTimeoutMs(wordCount)),
   })
   if (!res.ok) throw new Error(`Ollama request failed: ${res.status}`)
   const data = await res.json() as { choices: { message: { content: string } }[] }
@@ -80,7 +86,6 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   const { id } = await params
 
   const useLocal = process.env.LOCAL_LLM === 'true'
-  const extractInsights = useLocal ? extractInsightsLocal : extractInsightsClaude
   const modelName = useLocal ? (process.env.LOCAL_LLM_MODEL ?? 'qwen2.5:7b') : 'claude-sonnet-4-6'
 
   const [article] = await db.select().from(articles).where(eq(articles.id, id))
@@ -90,17 +95,25 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   const check = validateTransition(articleIngestionFlow, article.status as ArticleStatus, 'process', 'researcher')
   if (!check.valid) return NextResponse.json({ error: check.reason }, { status: 422 })
 
-  const result = await extractInsights(article.fullText)
+  const analyseStartedAt = new Date().toISOString()
+  const result = useLocal
+    ? await extractInsightsLocal(article.fullText, article.wordCount)
+    : await extractInsightsClaude(article.fullText)
+  const analyseCompletedAt = new Date().toISOString()
+  const analyseDurationMs = new Date(analyseCompletedAt).getTime() - new Date(analyseStartedAt).getTime()
 
   const existingData = article.data as ArticleData
+  const { analyseError: _cleared, ...cleanData } = existingData
   const updatedData: ArticleData = {
-    ...existingData,
+    ...cleanData,
     executiveSummary: result.executiveSummary,
     tags: result.tags,
+    analyseStartedAt,
+    analyseCompletedAt,
   }
 
   const [updatedArticle] = await db.update(articles)
-    .set({ status: 'processed', data: updatedData, updatedAt: new Date() })
+    .set({ status: 'processed', data: updatedData, analyseDurationMs, updatedAt: new Date() })
     .where(eq(articles.id, id))
     .returning()
 

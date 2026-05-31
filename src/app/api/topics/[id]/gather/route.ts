@@ -100,7 +100,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
           perspective: source.perspective as ArticleData['perspective'],
           tier: source.tier as ArticleData['tier'],
           tags: [],
-          ...(hasRssContent ? { wordCount: item.wordCount, accessLevel } : {}),
+          ...(hasRssContent ? { accessLevel } : {}),
         }
 
         const inserted = await db.insert(articles).values({
@@ -111,6 +111,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
           publishedDate: dateStr,
           status: hasRssContent ? 'fetched' : 'discovered',
           fullText: hasRssContent ? item.contentText : null,
+          wordCount: item.wordCount ?? null,
           data,
         }).onConflictDoNothing().returning()
 

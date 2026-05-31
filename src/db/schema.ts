@@ -25,8 +25,9 @@ export const sources = pgTable('sources', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
 
-// data column: ArticleData fields (title, perspective, tier, wordCount, accessLevel, executiveSummary, tags)
-// full_text: dedicated text column per ADR-003 (not in data JSONB per ADR-002)
+// data column: ArticleData fields (title, perspective, tier, accessLevel, executiveSummary, tags, errors, timing refs)
+// full_text: dedicated text column per ADR-003
+// word_count, analyse_duration_ms: dedicated integer columns per ADR-007 (numeric metrics, not JSONB)
 export const articles = pgTable('articles', {
   id: text('id').primaryKey(), // slug: {source}--{date}--{title-slug}
   topicId: text('topic_id').notNull().references(() => topics.id),
@@ -36,6 +37,8 @@ export const articles = pgTable('articles', {
   status: text('status').notNull().default('discovered'), // ArticleStatus
   data: jsonb('data').notNull().default({}), // ArticleData
   fullText: text('full_text'), // populated at fetch step; dedicated column per ADR-003
+  wordCount: integer('word_count'), // set at gather; dedicated column per ADR-007
+  analyseDurationMs: integer('analyse_duration_ms'), // set at process; dedicated column per ADR-007
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })

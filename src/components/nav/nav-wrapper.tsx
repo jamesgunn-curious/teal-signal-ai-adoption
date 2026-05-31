@@ -20,9 +20,8 @@ export async function NavWrapper() {
   return (
     <TopNav
       counts={{
-        // Article queue: discovered (needs fetch) + fetched (needs analyse)
-        queue:  ac('discovered') + ac('fetched'),
-        curate: ic('extracted'),
+        pipeline: ac('discovered') + ac('fetched'),
+        curate:   ic('extracted'),
       }}
     />
   )

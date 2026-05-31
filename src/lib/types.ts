@@ -3,7 +3,7 @@ export type ArticleStatus = 'discovered' | 'fetched' | 'processed' | 'archived' 
 export type InsightStatus = 'extracted' | 'curated' | 'dismissed'
 export type TopicStatus = 'active' | 'archived'
 export type SourceStatus = 'active' | 'paused' | 'removed'
-export type NarrativeStatus = 'active' | 'archived' | 'resolved'
+export type NarrativeStatus = 'active' | 'dormant' | 'closed'
 
 export type Perspective = 'practitioner' | 'leadership' | 'product' | 'research' | 'editorial'
 export type Tier = '1' | '2'
@@ -16,12 +16,14 @@ export interface ArticleData {
   title: string
   perspective: Perspective
   tier: Tier
-  wordCount?: number
   accessLevel?: AccessLevel
   executiveSummary?: string
   tags: string[]
-  fetchError?: string    // set when gather fails or content is thin; article stays in discovered
-  analyseError?: string  // set when Claude analysis fails; article stays in fetched for retry
+  fetchError?: string      // set when gather fails or content is thin; article stays in discovered
+  analyseError?: string    // set when analysis fails; article stays in fetched for retry
+  analyseStartedAt?: string    // ISO timestamp — set at start of LLM call
+  analyseCompletedAt?: string  // ISO timestamp — set on success
+  analyseDurationMs?: number   // wall-clock ms for the LLM call; stored in JSONB per spec Phase 2
 }
 
 export interface ArticleInstance {
@@ -34,6 +36,8 @@ export interface ArticleInstance {
   status: ArticleStatus
   data: ArticleData
   fullText: string | null
+  wordCount: number | null       // dedicated column per ADR-007
+  analyseDurationMs: number | null // dedicated column per ADR-007
   createdAt: string
   updatedAt: string
 }

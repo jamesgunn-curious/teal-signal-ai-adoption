@@ -118,10 +118,43 @@ Full SDD conventions: `~/projects/command-centre/projects/teal-os-framework/desi
 ## Commands
 
 ```bash
-npm run dev          # Start dev server
-npm run build        # Production build
-npm run lint         # ESLint
-npm run db:push      # Push Drizzle schema to Postgres (requires DATABASE_URL in .env.local)
-npm run db:seed      # Seed database with ai-adoption topic and sources
-npm run db:studio    # Drizzle Studio
+npm run dev              # Start dev server
+npm run build            # Production build
+npm run lint             # ESLint
+npm run db:push          # Push Drizzle schema to Postgres (requires DATABASE_URL in .env.local)
+npm run db:seed          # Seed database with ai-adoption topic and sources
+npm run db:migrate-signal  # One-off: import from legacy Python pipeline at ~/projects/signal/topics/ai-adoption/
+npm run db:studio        # Drizzle Studio
 ```
+
+**LLM backend** — the analyse step (`POST /api/articles/[id]/process`) supports two backends:
+
+| Mode | Env var | Model |
+|------|---------|-------|
+| Claude API (default) | _(unset)_ | `claude-sonnet-4-6` |
+| Local Ollama | `LOCAL_LLM=true` | `LOCAL_LLM_MODEL` (default: `qwen2.5:7b`) at `LOCAL_LLM_ENDPOINT` (default: `http://localhost:11434/v1/chat/completions`) |
+
+Timeout for local LLM is dynamic: `min(ceiling, max(120s, wordCount × 400ms))`. Override the ceiling with `LOCAL_LLM_TIMEOUT_MS` (default: `600000` — 10 min).
+
+---
+
+## App structure
+
+Six pages, grouped by pipeline stage:
+
+| Route | Purpose |
+|-------|---------|
+| `/dashboard` | Source management — add/edit sources, trigger gather per topic |
+| `/gather` | Bulk gather + bulk analyse across all topics |
+| `/articles` | Article queue — per-article fetch and process actions |
+| `/insights` | Insight review — curate or dismiss extracted insights |
+| `/narratives` | Narrative threads — researcher-curated insight groupings |
+| `/digest` | Read-only output view filtered by perspective/status |
+
+**Role toggle** (`src/lib/store.ts`) — Zustand store holding `researcher | reader`. Toggled in the top nav. API routes receive role as a request parameter; the store is client-side only.
+
+---
+
+## UI conventions
+
+Status chips must always use the token classes from `src/lib/status-tokens.ts` and `src/app/globals.css`. Never apply inline Tailwind colour classes to status values — the token system uses colour + CSS texture as a two-channel semantic signal (ADR-005). The wireframe reference is at `.c4/design/Signal-Digest-Wireframe.html`.

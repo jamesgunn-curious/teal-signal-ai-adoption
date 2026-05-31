@@ -4,24 +4,21 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 interface NavCounts {
-  queue:  number
-  curate: number
+  pipeline: number
+  curate:   number
 }
 
 const TABS = [
-  { href: '/dashboard',   label: 'Sources',       countKey: null },
-  { href: '/gather',      label: 'Discover',      countKey: null },
-  { href: '/articles',    label: 'Article queue', countKey: 'queue'  as const },
-  { href: '/insights',    label: 'Review',        countKey: 'curate' as const },
-  { href: '/digest',      label: 'Digest',        countKey: null },
-  { href: '/narratives',  label: 'Narratives',    countKey: null },
+  { href: '/pipeline',   label: 'Pipeline',   countKey: 'pipeline' as const },
+  { href: '/insights',   label: 'Review',     countKey: 'curate'   as const },
+  { href: '/narratives', label: 'Narratives', countKey: null },
+  { href: '/digest',     label: 'Digest',     countKey: null },
 ]
 
 export function TopNav({ counts }: { counts?: NavCounts }) {
   const pathname = usePathname()
 
-  const isActive = (href: string) =>
-    href === '/dashboard' ? pathname === href : pathname.startsWith(href)
+  const isActive = (href: string) => pathname.startsWith(href)
 
   return (
     <header className="sticky top-0 z-20 border-b border-[#00e05a22] bg-[#0a0a0a]">
@@ -29,7 +26,7 @@ export function TopNav({ counts }: { counts?: NavCounts }) {
 
         {/* Brand — compact, fixed */}
         <Link
-          href="/dashboard"
+          href="/pipeline"
           className="flex items-center gap-2 px-4 shrink-0 border-r border-[#00e05a22] hover:bg-[#0f1a12] transition-colors"
         >
           <div className="w-5 h-5 rounded-full border border-[#00e05a] flex items-center justify-center shrink-0">

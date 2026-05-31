@@ -46,6 +46,9 @@ The primary workflow entity. Moves through gather → fetch → process stages, 
 | `status` | ArticleStatus | Managed by Teal Flow |
 | `url` | string | Deduplication key |
 | `published_date` | date | From RSS feed |
+| `full_text` | text? | Dedicated text column — see ADR-003 |
+| `word_count` | integer? | Set at discover (if RSS content) or gather step — dedicated column, see ADR-007 |
+| `analyse_duration_ms` | integer? | Wall-clock ms for LLM call — dedicated column, see ADR-007 |
 | `created_at` | timestamp | — |
 | `updated_at` | timestamp | — |
 
@@ -56,13 +59,13 @@ The primary workflow entity. Moves through gather → fetch → process stages, 
 | `title` | string | discover step | — |
 | `perspective` | enum | discover step (from source config) | — |
 | `tier` | '1' \| '2' | discover step (from source config) | — |
-| `word_count` | number | discover or gather step | Set at discover if RSS content extracted; else set at gather |
 | `access_level` | enum | discover or gather step | `full` (>500w) \| `partial` (150–500w) \| `thin` (<150w) |
 | `executive_summary` | string | analyse step | 2-sentence LLM summary |
 | `tags` | string[] | analyse step | From topic tag vocabulary |
 | `fetch_error` | string? | gather step | Set when gather fails or content is thin; article stays `discovered` |
 | `analyse_error` | string? | analyse step | Set when LLM backend call fails; article stays `fetched` for retry; cleared on success |
-| `full_text` | — | — | Stored as dedicated `text` column (not in JSONB) — see ADR-003 |
+| `analyse_started_at` | string? | analyse step | ISO timestamp — reference only; metric is `analyse_duration_ms` column |
+| `analyse_completed_at` | string? | analyse step | ISO timestamp — reference only |
 
 **States**: `discovered` → `fetched` → `processed` → `archived` + `paywalled` | `failed` (terminal)
 

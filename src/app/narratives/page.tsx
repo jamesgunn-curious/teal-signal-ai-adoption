@@ -8,9 +8,9 @@ import Link from 'next/link'
 const TOPIC_ID = 'ai-adoption'
 
 const STATUS_STYLE: Record<string, string> = {
-  active:   'text-[#00c050]',
-  archived: 'text-[#555]',
-  resolved: 'text-[#007830]',
+  active:  'text-[#00c050]',
+  dormant: 'text-[#555]',
+  closed:  'text-[#007830]',
 }
 
 export default async function NarrativesPage() {
@@ -24,16 +24,16 @@ export default async function NarrativesPage() {
     .where(eq(narratives.topicId, TOPIC_ID))
     .groupBy(narratives.id)
 
-  const active   = rows.filter(r => r.narrative.status === 'active')
-  const archived = rows.filter(r => r.narrative.status !== 'active')
+  const active  = rows.filter(r => r.narrative.status === 'active')
+  const dormant = rows.filter(r => r.narrative.status !== 'active')
 
   return (
     <div className="max-w-4xl">
       <PageHeader
         crumbs={['Output', 'Narratives']}
         stats={[
-          { n: active.length,   label: 'active',   accent: active.length > 0 },
-          { n: archived.length, label: 'archived' },
+          { n: active.length,  label: 'active',  accent: active.length > 0 },
+          { n: dormant.length, label: 'dormant' },
         ]}
         actions={<CreateNarrativeForm />}
       />
@@ -59,11 +59,11 @@ export default async function NarrativesPage() {
               </section>
             )}
 
-            {archived.length > 0 && (
+            {dormant.length > 0 && (
               <section>
-                <h2 className="text-[10px] font-semibold text-[#006025] uppercase tracking-widest mb-2">Archived</h2>
+                <h2 className="text-[10px] font-semibold text-[#006025] uppercase tracking-widest mb-2">Dormant · Closed</h2>
                 <div className="space-y-2 opacity-50">
-                  {archived.map(({ narrative, insightCount }) => (
+                  {dormant.map(({ narrative, insightCount }) => (
                     <NarrativeRow key={narrative.id} narrative={narrative} insightCount={insightCount} />
                   ))}
                 </div>
