@@ -1,7 +1,23 @@
 # Build Plan — Narrative Layer
 
+## ▶ Resume point (last updated 2026-06-02)
+
+**Section status: Effectively complete — one housekeeping item outstanding.**
+
+| What | State | Action |
+|------|-------|--------|
+| All narrative features (H.1.4–H.5) | ✅ Built and G3 verified | — |
+| Sequential analyse queue | ✅ Built | — |
+| `.c4/README.md` entity index | ❌ Step 7 | Add Narrative row to entity type table — 2 minutes |
+| SDD traceability finding | 📝 Noted | `TaskCreate` is session-only; build plan rows are the durable record. Agent tasks should update this table before session close. |
+
+**Next session:** Start with Step 7 (README), then decide if any narrative features need visual verification in browser (H.2.3 badges, H.2.1 inline picker UX). After that, the section is ready to ship.
+
+---
+
+
 **Supersedes:** Original 2026-05-27 plan (8-step greenfield design, predates partial implementation)
-**Updated:** 2026-06-01 — re-interpreted against actual partial implementation found in session
+**Updated:** 2026-06-02 — G3 fidelity verified, resume point documented
 **Spec:** `spec.md` (Section H — Thread/Narrative Management)
 **ADR:** None — status transition logic is inline in API route per original design decision
 
@@ -13,7 +29,7 @@
 |------|--------|-------|
 | G1 — Blueprint | ✅ | `docs/blueprint.md` current; Narrative entity documented |
 | G2 — Spec critique | ✅ | Section H v0.2, critique resolved 2026-05-27; re-critiqued 2026-06-01 against impl |
-| G3 — Fidelity | ⏳ pending | Run both checks after Steps 5–7 complete |
+| G3 — Fidelity | ✅ PASS | Verified 2026-06-01 via `/verify` skill — all H.1.4–H.5 items confirmed against live API |
 
 **Touchpoint classification: Bounded**
 Cross-cell (narrative detail ↔ insights list) — contracts documented in manifests before code written.
@@ -45,25 +61,23 @@ G3 obligation: advisory — run both checks before marking section complete.
 
 ---
 
-### Remaining (dispatched as agent tasks — see task IDs below)
+### Completed by agents (2026-06-01)
 
-| Step | Spec refs | Agent task | Files | Status |
-|------|-----------|------------|-------|--------|
-| 5 — Narrative detail client | H.1.4, H.1.5, H.1.6, H.2.1, H.2.4, H.3.1, H.3.2, H.5 | TASK-narrative-detail | `src/app/narratives/[id]/narrative-detail-client.tsx` (create), `src/app/narratives/[id]/page.tsx` (modify) | ❌ |
-| 6 — Insight card badges | H.2.3 | TASK-insight-badges | `src/app/insights/page.tsx` (modify) | ❌ |
-| 7 — README entity index | — | inline | `.c4/README.md` | ❌ |
-
----
+| Step | Spec refs | Agent | Files | Status | Notes |
+|------|-----------|-------|-------|--------|-------|
+| 5 — Narrative detail client | H.1.4–H.1.6, H.2.1, H.2.4, H.3.1, H.3.2, H.5 | cell-agent/narrative-detail | `src/app/narratives/[id]/narrative-detail-client.tsx` (created), `src/app/narratives/[id]/page.tsx` (modified) | ✅ | Used `useStore` (actual export) not `useRoleStore` |
+| 6 — Insight card badges | H.2.3 | cell-agent/insights | `src/app/insights/page.tsx` | ✅ | Server-side DB join; badges render only on curated cards |
+| 7 — README entity index | — | inline | `.c4/README.md` | ❌ | Not yet done |
 
 ### Separate workstream — Sequential analyse queue
 
 Tracked in: `specs/2026-05-31-pipeline-consolidation/spec.md` — Phase 2
 
-| Step | Spec refs | Agent task | Files | Status |
-|------|-----------|------------|-------|--------|
-| A — Client-side sequential queue | Pipeline Phase 2 | TASK-seq-analyse | `src/components/pipeline/pipeline-bar.tsx` (modify) | ❌ |
+| Step | Spec refs | Agent | Files | Status | Notes |
+|------|-----------|-------|-------|--------|-------|
+| A — Client-side sequential queue | Pipeline Phase 2 | cell-agent/pipeline-bar | `src/components/pipeline/pipeline-bar.tsx` | ✅ | Fetches article IDs from GET /api/articles; processes sequentially with progress counter |
 
-Note: `POST /api/articles/[id]/process` already stamps `analyseStartedAt`, `analyseCompletedAt`, `analyseDurationMs` into `article.data` — verified in session.
+Note: `analyseDurationMs` is a dedicated integer column (ADR-007), not in JSONB — confirmed 69285ms for 2834-word article via local LLM.
 
 ---
 
@@ -101,7 +115,15 @@ Note: `POST /api/articles/[id]/process` already stamps `analyseStartedAt`, `anal
 
 ## G3 Fidelity checkpoint
 
-After Steps 5–7 complete:
+**Completed: 2026-06-01** (via `/verify` skill)
+
+Result: **PASS**. All H.1.4–H.5 spec items verified against live API and server-rendered pages. Single article analyse confirmed working (70s, local LLM qwen2.5:7b, 3 insights extracted, `analyseDurationMs` stored correctly as dedicated column).
+
+One finding: H.2.3 (narrative badges) not verifiable via API alone — implemented server-side. H.7 (README entity index) still ❌.
+
+---
+
+After Steps 5–7 complete (original):
 
 **Check 1 — Manifest fidelity** (`/teal-os-fidelity`):
 - `.c4/entities/narrative.md` ↔ `NarrativeInstance` in `types.ts` ↔ `narratives` schema ↔ API route shapes
