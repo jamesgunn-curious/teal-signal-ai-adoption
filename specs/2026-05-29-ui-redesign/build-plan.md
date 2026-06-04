@@ -72,31 +72,38 @@
 ### Phase 5 — Bulk selection + contextual action bar
 *Depends on Phase 1 (StatusChip). Independent of Phases 2–4.*
 
-| Step | Work | Agent | Parallel? |
+**D3 resolved:** `ArticleQueue` (`src/components/pipeline/article-queue.tsx`) is already a `'use client'` component with `useState` — no wrapper needed.
+
+| Step | Status | Work | Implementation notes |
 |---|---|---|---|
-| 5.1 | Resolve D3 (client state approach) | — | before 5.2 |
-| 5.2 | Create `ArticleQueueClient` wrapper component with selection state | `[agent: cell-agent/articles]` | — |
-| 5.3 | Add checkboxes + select-all to article rows | `[agent: cell-agent/articles]` | after 5.2 |
-| 5.4 | Build contextual bulk action bar (appears on selection) | `[agent: cell-agent/articles]` | after 5.3 |
-| 5.5 | Wire fetch/process actions to server actions; add progress feedback | `[agent: cell-agent/articles]` | after 5.4 |
-| 5.6 | Remove `BulkActions` from dashboard header | `[agent: cell-agent/articles]` | after 5.5 |
+| 5.1 | ✅ | D3 resolved — no wrapper needed | `ArticleQueue` is already client-side |
+| 5.2 | ❌ | Add `selected: Set<string>` state + checkbox per article row | Add `const [selected, setSelected] = useState<Set<string>>(new Set())` to `ArticleQueue`. Add `<input type="checkbox">` at the start of each article row, styled to match panel-hush tokens. Toggle on click. |
+| 5.3 | ❌ | Select-all / deselect-all control | Add above the filter pills. "Select all" selects all articles in current filter. "Deselect all" clears. Show count: `3 of 12 selected`. |
+| 5.4 | ❌ | Contextual bulk action bar | Render a bar below the filter pills when `selected.size > 0`. Contents: `{N} selected · [Gather selected] [Analyse selected] [Clear]`. Gather selected only enabled when ≥1 selected article is `discovered`; Analyse selected only when ≥1 is `fetched`. |
+| 5.5 | ❌ | Wire bulk actions with sequential progress | Process selected articles one at a time (same pattern as PipelineBar's sequential analyse queue). Show inline progress: `Gathering 2/5`. On finish: `Gathered 4 · 1 failed`. Call `router.refresh()` after completion. Clear selection. |
+| 5.6 | ✅ | Remove BulkActions from dashboard | Already done in pipeline-consolidation Phase 1 |
 
 *Manifests to read: `.c4/entities/article.md`, `.c4/flows/article-ingestion.md`*
+*File to edit: `src/components/pipeline/article-queue.tsx`*
 
 ---
 
 ### Phase 6 — Article detail screen
 *Independent of Phases 2–5. Can start any time after Phase 1.*
 
-| Step | Work | Agent | Parallel? |
-|---|---|---|---|
-| 6.1 | Create `src/app/articles/[id]/page.tsx` | `[agent: cell-agent/articles]` | — |
-| 6.2 | Add PageHeader with back link + article stats | `[agent: cell-agent/articles]` | after 6.1 |
-| 6.3 | Render article metadata, summary, tags, insights list | `[agent: cell-agent/articles]` | after 6.1 |
-| 6.4 | Inline status-appropriate action buttons (fetch / process / archive) | `[agent: cell-agent/articles]` | after 6.1 |
-| 6.5 | Make article titles in queue list link to `/articles/[id]` | `[agent: cell-agent/articles]` | after 6.1 |
+**Context:** `src/app/articles/page.tsx` already redirects → `/pipeline`. No conflicts. `src/app/articles/[id]/` does not exist yet.
 
-*Manifests to read: `.c4/entities/article.md`, `.c4/flows/article-ingestion.md`*
+| Step | Status | Work | Implementation notes |
+|---|---|---|---|
+| 6.1 | ❌ | Create `src/app/articles/[id]/page.tsx` server component | Fetch article by `params.id` from DB (drizzle: `db.select().from(articles).where(eq(articles.id, id))`). Also fetch related insights (`db.select().from(insights).where(eq(insights.articleId, id))`). 404 if not found. |
+| 6.2 | ❌ | PageHeader | `<PageHeader crumbs={['Pipeline', article.data.title ?? 'Article']} backHref="/pipeline" />` — uses existing PageHeader component. Stats: status chip, word count, perspective. |
+| 6.3 | ❌ | Metadata + summary section | Status chip, perspective/tier, source slug, publish date. Executive summary in a card. Tags as pills (same style as article queue rows). |
+| 6.4 | ❌ | Insights list | All insights for this article. Each row: `<StatusChip status={insight.status} />`, insight text, quote (if present), tags. Group by status: extracted first, then curated, then dismissed. |
+| 6.5 | ❌ | Action buttons | Reuse `<ArticleActions articleId={id} status={article.status} />` — already handles all transitions. Place below PageHeader. After action, `router.refresh()` already fires from ArticleActions. |
+| 6.6 | ❌ | Link article titles in queue to detail page | In `src/components/pipeline/article-queue.tsx`: wrap article title `<a>` with `href={/articles/${article.id}}` (internal link, not `target="_blank"`). Keep external URL accessible via a small "↗" icon link. |
+
+*Manifests to read: `.c4/entities/article.md`, `.c4/entities/insight.md`*
+*New file: `src/app/articles/[id]/page.tsx`*
 
 ---
 
@@ -115,9 +122,10 @@ Phase 6 (article detail)  — independent after Phase 1
 
 ## Ready to ship when
 
-- All ❌ items in spec.md implemented
-- 🟠 open decisions resolved (D1, D2, D3)
+- ✅ All Phase 1–4 items done
+- ❌ Phase 5 steps 5.2–5.5 implemented
+- ❌ Phase 6 steps 6.1–6.6 implemented
+- ✅ Open decisions D1, D2, D3 resolved
 - `/teal-os-fidelity` clean
 - `/spec-fidelity specs/2026-05-29-ui-redesign/spec.md` clean
-- StatusChip renders correctly on all entity types in the UI
-- Wireframe screens compared manually against built screens (researcher role + reader role)
+- Wireframe screens compared manually against built screens (researcher + reader role)
