@@ -302,7 +302,22 @@ Sources can be edited (name, feedUrl, perspective, tier, accessType) via `PATCH 
 
 ⏸ **Thread layer** — Specced. See `specs/2026-05-27-hypothesis-layer/spec.md`. Research threads (formerly hypotheses) are a first-class entity with a separate build plan.
 
-🟠 **Batch actions (selected articles)** — Awaiting UI design. Bulk-all (gather all, analyse all, retry all) is implemented. Individual article selection + batch apply is deferred pending design.
+✅ **Batch actions (selected articles)** — Resolved 2026-06-05.
+Checkbox selection on article rows. Bulk action bar appears right-aligned when any articles are selected: Gather (discovered), Re-gather (paywalled/failed), Analyse (fetched), Archive (any). Sequential progress shown inline. Select all / Clear always visible in the filter pill row. See pipeline-consolidation spec Phase 3 Steps C.3.2/D.3.5.
+
+---
+
+## UI conventions
+
+These patterns apply throughout the application. Follow them when adding new UI.
+
+**Actions on the right.** Per-row actions (Gather, Analyse, Re-gather, Archive, Review, Dismiss) always sit on the right side of the row. Bulk/selection controls (Select all, Clear, bulk action buttons) are also right-aligned. This creates a consistent eye-path: content on the left, things you can do on the right.
+
+**Filter pill active state.** When a filter pill is selected, it inverts to a filled solid background in its status colour (the same principle as the "All" pill going fully green). No ring or halo — the fill is the signal. Inactive pills are at 60% opacity; selected pills are at 100% opacity with inverted colours. The CSS class `filter-pill-active` wrapping a `.status-chip` applies this inversion via CSS variable override.
+
+**Status chips as two-channel signal.** Status chips use colour + texture (ADR-005). Never override chip colours with arbitrary Tailwind classes — always use the token classes from `src/lib/status-tokens.ts` and the CSS in `globals.css`. The exception is `filter-pill-active` which intentionally inverts the chip for selection state.
+
+**Summary bars, not page headers.** Top-level tab pages (Pipeline, Review, Narratives, Digest) use inline summary bars (counts + primary actions) instead of the `PageHeader` component. `PageHeader` is reserved for nested/detail pages (article detail, narrative detail) where back-navigation context is meaningful.
 
 ---
 

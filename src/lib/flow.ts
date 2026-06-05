@@ -18,13 +18,17 @@ export const articleIngestionFlow: FlowTypeDefinition<ArticleStatus> = {
   flowType: 'article-ingestion',
   transitions: [
     // gather creates articles in 'discovered' — no from state, handled separately
-    { from: 'discovered', to: 'fetched',    action: 'fetch',         allowedRoles: ['researcher'] },
-    { from: 'discovered', to: 'paywalled',  action: 'markPaywalled', allowedRoles: ['researcher'] },
-    { from: 'discovered', to: 'failed',     action: 'markFailed',    allowedRoles: ['researcher'] },
-    { from: 'fetched',    to: 'processed',  action: 'process',       allowedRoles: ['researcher'] },
-    { from: 'fetched',    to: 'paywalled',  action: 'markPaywalled', allowedRoles: ['researcher'] },
-    { from: 'fetched',    to: 'failed',     action: 'markFailed',    allowedRoles: ['researcher'] },
-    { from: 'processed',  to: 'archived',   action: 'archive',       allowedRoles: ['researcher'] },
+    { from: 'discovered', to: 'fetched',   action: 'fetch',   allowedRoles: ['researcher'] },
+    { from: 'fetched',    to: 'processed', action: 'process', allowedRoles: ['researcher'] },
+    // re-gather: retry fetch on paywalled/failed articles
+    { from: 'paywalled',  to: 'fetched',   action: 'fetch',   allowedRoles: ['researcher'] },
+    { from: 'failed',     to: 'fetched',   action: 'fetch',   allowedRoles: ['researcher'] },
+    // archive available from any non-terminal state — researcher decision to stop retrying
+    { from: 'discovered', to: 'archived',  action: 'archive', allowedRoles: ['researcher'] },
+    { from: 'fetched',    to: 'archived',  action: 'archive', allowedRoles: ['researcher'] },
+    { from: 'processed',  to: 'archived',  action: 'archive', allowedRoles: ['researcher'] },
+    { from: 'paywalled',  to: 'archived',  action: 'archive', allowedRoles: ['researcher'] },
+    { from: 'failed',     to: 'archived',  action: 'archive', allowedRoles: ['researcher'] },
   ],
 }
 

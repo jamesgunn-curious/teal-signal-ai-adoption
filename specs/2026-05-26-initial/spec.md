@@ -13,19 +13,9 @@ A researcher manages the research scope: creating topics, registering sources, a
 
 ### A.1 — Create a topic
 
-❌ **A.1.1**
-Given I am a researcher on the topics page,
-When I click "New topic" and complete the form (name, description, lookback_days),
-Then a new topic is created with status `active` and I am taken to the topic detail view.
+⏸ **A.1.1** — *Permanently deferred. Single-topic v1 — `ai-adoption` is seeded directly. Multi-topic UI is out of scope for this implementation.*
 
-> Note: Single-topic v1 — `ai-adoption` is seeded. Topic creation UI deferred per blueprint multi-topic decision.
-
-❌ **A.1.2**
-Given I am a researcher viewing a topic,
-When I click "Archive topic",
-Then the topic status changes to `archived`, all associated sources are paused, and the topic no longer appears in the active topics list.
-
-> Note: Deferred with A.1.1.
+⏸ **A.1.2** — *Permanently deferred with A.1.1.*
 
 ⏸ **A.1.3** — *Deferred to Thread Layer spec. Specced in `specs/2026-05-27-hypothesis-layer/spec.md`. Research threads (formerly hypotheses) are a separate build.*
 
@@ -81,12 +71,12 @@ Then the system fetches the RSS feed for each active source (using the configure
 
 If the RSS item includes a `<content:encoded>` or `<description>` block with ≥ 150 words of usable text, the article is created with status `fetched` and `full_text` pre-populated from the RSS content — the Gather step is skipped for that article. Articles without sufficient RSS content are created with status `discovered` and require a separate Gather step.
 
-⚠️ **B.1.2**
+✅ **B.1.2**
 Given a discover run is in progress,
 When the run completes,
 Then I see a summary: N new articles discovered from M sources.
 
-> Deviation: summary shows total new article count but no per-source breakdown in the UI. Per-source results (including errors) are returned in the API response but not surfaced to the user.
+> Resolved: pipeline bar now shows per-source breakdown on discover completion, e.g. `pragmatic-engineer +3 · martinfowler +1`. Feed errors also surfaced per source.
 
 ✅ **B.1.3**
 Given a URL already exists in the system (any status),
@@ -156,7 +146,7 @@ Given articles with status `discovered` exist,
 When I click "Gather all N" on the dashboard,
 Then each discovered article is fetched in sequence. Articles with sufficient content advance to `fetched`. Articles with thin content or fetch errors stay in `discovered` with `fetchError` recorded. A summary shows N gathered, M failed.
 
-🟠 **C.3.2** — *Awaiting UI design.*
+✅ **C.3.2**
 Given multiple articles with status `discovered`,
 When I select a set and click "Gather selected",
 Then the system gathers each selected article and updates statuses accordingly.
@@ -198,7 +188,7 @@ Given an article with status `discovered` (not yet gathered),
 When I attempt to analyse it,
 Then the "Analyse" action is not available — the article must be gathered first.
 
-❌ **D.2.2**
+✅ **D.2.2**
 Given an article that has already been analysed (`processed`),
 When I attempt to analyse it again,
 Then a confirmation is shown: re-analysing will add new insights but will not delete existing ones.
@@ -225,7 +215,7 @@ Given an article has a recorded `analyseError`,
 When I view the article card,
 Then the error message is visible (amber colour, distinct from the red `fetchError`) so I understand why analysis has not yet succeeded.
 
-🟠 **D.3.5** — *Awaiting UI design.*
+✅ **D.3.5**
 Given multiple articles with status `fetched`,
 When I select a set and click "Analyse selected",
 Then each article is analysed in sequence with progress indication.
@@ -301,10 +291,7 @@ Then all curated insights are shown and the filter UI resets.
 
 ### F.3 — Trends
 
-🟠 **F.3.1** — *Awaiting UI design. Do not implement until design is provided.*
-Given curated insights exist across multiple discover runs,
-When I view the trends panel,
-Then I see tag frequency over time.
+⏸ **F.3.1** — *Superseded by Narratives. Tag frequency tracking was the intended value here; the Narratives layer provides richer researcher-driven tracking. Closed.*
 
 ---
 
@@ -328,11 +315,11 @@ Then I see only the digest — without having to log out.
 
 | ID | Type | Description |
 |----|------|-------------|
-| B.1.2 | ⚠️ Deviation | Discover summary shows total count only — no per-source breakdown in UI |
-| D.2.2 | ❌ Not built | Re-analyse confirmation dialog |
-| A.1.1/A.1.2 | ❌ Deferred | Topic create/archive UI (single-topic v1) |
-| C.3.2/D.3.5 | 🟠 Blocked | Batch gather/analyse selected — awaiting UI design |
-| F.3.1 | 🟠 Blocked | Trends view — awaiting UI design |
+| B.1.2 | ✅ Resolved | Per-source breakdown shown in pipeline bar on discover completion |
+| D.2.2 | ✅ Built | Re-analyse confirmation dialog on processed articles |
+| A.1.1/A.1.2 | ⏸ Closed | Single-topic v1 — permanently deferred, `ai-adoption` seeded directly |
+| C.3.2/D.3.5 | ✅ Built | Checkbox selection + bulk action bar in article queue |
+| F.3.1 | ⏸ Closed | Trends view — superseded by Narratives layer |
 | A.1.3/E.2.1 | ⏸ Deferred | Thread layer (separate spec), insight editing — teal-os extension candidates |
 
 ---
@@ -342,9 +329,9 @@ Then I see only the digest — without having to log out.
 | ID | Decision | Status |
 |----|----------|--------|
 | A.1.3 | Thread layer (research narratives) | ⏸ Separate spec — `specs/2026-05-27-hypothesis-layer/spec.md` |
-| C.3.2 / D.3.5 | Batch gather/analyse selected UX | 🟠 Awaiting UI design |
+| C.3.2 / D.3.5 | Batch gather/analyse selected UX | ✅ Built |
 | E.2.1 | Insight editing | ⏸ Deferred — teal-os extension candidate |
-| F.3.1 | Trends view | 🟠 Awaiting UI design |
+| F.3.1 | Trends view | ⏸ Closed — superseded by Narratives layer |
 | Blueprint | Full text storage | ✅ Resolved — dedicated `text` column (ADR-003) |
 | Blueprint | Multi-topic UI | ✅ Resolved — single topic for v1 |
 | Blueprint | RSS content at discover | ✅ Resolved — `<content:encoded>` captured at discover time; articles with ≥ 150 words go straight to `fetched` |

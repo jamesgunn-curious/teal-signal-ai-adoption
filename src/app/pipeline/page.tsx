@@ -1,10 +1,8 @@
 import { db } from '@/db'
 import { articles, sources, insights, topics } from '@/db/schema'
 import { eq, sql, desc } from 'drizzle-orm'
-import { PageHeader } from '@/components/ui/page-header'
 import { PipelineBar } from '@/components/pipeline/pipeline-bar'
-import { SourcesSection } from '@/components/pipeline/sources-section'
-import { ArticleQueue } from '@/components/pipeline/article-queue'
+import { PipelineContent } from '@/components/pipeline/pipeline-content'
 
 const TOPIC_ID = 'ai-adoption'
 
@@ -39,16 +37,7 @@ export default async function PipelinePage() {
 
   return (
     <div className="max-w-5xl">
-      <PageHeader
-        crumbs={['Workflow', 'Pipeline']}
-        stats={[
-          { n: activeSources,                               label: 'active feeds', accent: true },
-          { n: pipeline.discovered + pipeline.fetched,      label: 'pending',      accent: pipeline.discovered + pipeline.fetched > 0 },
-          { n: pipeline.processed,                          label: 'analysed' },
-        ]}
-      />
-
-      <div className="px-8 pb-8 space-y-6">
+      <div className="px-8 pt-8 pb-8 space-y-6">
         <PipelineBar
           topicId={TOPIC_ID}
           discovered={pipeline.discovered}
@@ -59,10 +48,14 @@ export default async function PipelinePage() {
           lookbackDays={lookbackDays}
         />
 
-        <SourcesSection sources={allSources} topicId={TOPIC_ID} />
-
-        <ArticleQueue articles={allArticles} insightCountMap={insightCountMap} />
+        <PipelineContent
+          sources={allSources}
+          topicId={TOPIC_ID}
+          articles={allArticles}
+          insightCountMap={insightCountMap}
+        />
       </div>
     </div>
+
   )
 }

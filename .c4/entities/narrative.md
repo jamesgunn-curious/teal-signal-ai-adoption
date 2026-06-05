@@ -30,6 +30,18 @@ active          → closed
 
 Note: Status transitions are handled inline in the API route (`PATCH /api/narratives/[id]`). No Teal Flow type is used.
 
+### Dormant transition options
+
+Marking a narrative dormant is not a simple status flip — it is the natural moment to decide what happens to the narrative. The UI presents three options:
+
+| Option | UI label | What happens | `parentId` effect |
+|--------|----------|--------------|-------------------|
+| **Pause** | "Pause — may revive" | Status → `dormant` | unchanged |
+| **Fold into** | "Fold into →" | Status → `closed`; picks an existing narrative as target | set to target narrative id |
+| **Split into** | "Split into →" | Two new `active` narratives created with `parentId` = this id; this narrative → `closed` | set on child narratives |
+
+This replaces the standalone split/converge operations. The dormant transition is the single intentional gateway where narrative lineage is recorded.
+
 ## Fields
 
 | Field | Type | Notes |

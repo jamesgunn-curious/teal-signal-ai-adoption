@@ -28,23 +28,39 @@ export function PipelineBar({
 
   const fetched = fetchedArticleIds.length
 
-  async function runDiscoverOrGather(action: 'discover' | 'gather') {
-    setLoading(action)
+  async function runDiscover(force = false) {
+    setLoading('discover')
     setFeedback(null)
     try {
-      const endpoint = action === 'discover'
-        ? `/api/topics/${topicId}/gather`
-        : `/api/topics/${topicId}/bulk-gather`
-      const res = await fetch(endpoint, { method: 'POST' })
-      const data = await res.json() as Record<string, unknown>
-      if (action === 'discover') {
-        const n = (data.totalNew as number) ?? 0
-        setFeedback(n > 0 ? `${n} new articles discovered` : 'No new articles')
+      const url = `/api/topics/${topicId}/gather${force ? '?force=true' : ''}`
+      const res = await fetch(url, { method: 'POST' })
+      const data = await res.json() as { totalNew: number; sources: { source: string; new: number; error?: string }[] }
+      const n = data.totalNew ?? 0
+      const withNew = (data.sources ?? []).filter(s => s.new > 0)
+      const withError = (data.sources ?? []).filter(s => s.error)
+      const label = force ? '· force' : ''
+      if (n === 0 && withError.length === 0) {
+        setFeedback(`No new articles${label}`)
       } else {
-        const p = (data.processed as number) ?? 0
-        const f = (data.failed as number) ?? 0
-        setFeedback(`Gathered ${p}${f > 0 ? ` · ${f} failed` : ''}`)
+        const parts = withNew.map(s => `${s.source} +${s.new}`)
+        const errParts = withError.map(s => `${s.source} error`)
+        setFeedback([...parts, ...errParts].join(' · ') + (label ? ` ${label}` : ''))
       }
+      router.refresh()
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  async function runGather() {
+    setLoading('gather')
+    setFeedback(null)
+    try {
+      const res = await fetch(`/api/topics/${topicId}/bulk-gather`, { method: 'POST' })
+      const data = await res.json() as Record<string, unknown>
+      const p = (data.processed as number) ?? 0
+      const f = (data.failed as number) ?? 0
+      setFeedback(`Gathered ${p}${f > 0 ? ` · ${f} failed` : ''}`)
       router.refresh()
     } finally {
       setLoading(null)
@@ -103,13 +119,23 @@ export function PipelineBar({
 
         {/* Step 1 — Discover */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => runDiscoverOrGather('discover')}
-            disabled={busy}
-            className="px-3 py-1.5 bg-[#00e05a] text-[#0a0a0a] text-xs font-semibold rounded hover:bg-[#00f060] disabled:opacity-50 transition-colors"
-          >
-            {loading === 'discover' ? 'Discovering…' : '↻ Discover'}
-          </button>
+          <div className="flex items-stretch">
+            <button
+              onClick={() => runDiscover(false)}
+              disabled={busy}
+              className="px-3 py-1.5 bg-[#00e05a] text-[#0a0a0a] text-xs font-semibold rounded-l hover:bg-[#00f060] disabled:opacity-50 transition-colors"
+            >
+              {loading === 'discover' ? 'Discovering…' : `↻ Discover · ${lookbackDays}d`}
+            </button>
+            <button
+              onClick={() => runDiscover(true)}
+              disabled={busy}
+              title={`Force rescan all sources · ${lookbackDays}d window`}
+              className="px-2 py-1.5 bg-[#00c04a] text-[#0a0a0a] text-[10px] font-semibold rounded-r border-l border-[#009038] hover:bg-[#00e05a] disabled:opacity-50 transition-colors"
+            >
+              ⟳
+            </button>
+          </div>
           <span className="text-xs text-[#007830] tabular-nums">{discovered} discovered</span>
         </div>
 
@@ -119,7 +145,7 @@ export function PipelineBar({
         <div className="flex items-center gap-2">
           {discovered > 0 ? (
             <button
-              onClick={() => runDiscoverOrGather('gather')}
+              onClick={runGather}
               disabled={busy}
               className="px-3 py-1.5 border border-amber-800 text-amber-400 bg-amber-950 text-xs font-semibold rounded hover:bg-amber-900 disabled:opacity-50 transition-colors"
             >

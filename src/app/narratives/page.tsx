@@ -1,7 +1,6 @@
 import { db } from '@/db'
 import { narratives, narrativeInsights } from '@/db/schema'
 import { eq, sql } from 'drizzle-orm'
-import { PageHeader } from '@/components/ui/page-header'
 import { CreateNarrativeForm } from './create-form'
 import Link from 'next/link'
 
@@ -25,18 +24,30 @@ export default async function NarrativesPage() {
     .groupBy(narratives.id)
 
   const active  = rows.filter(r => r.narrative.status === 'active')
-  const dormant = rows.filter(r => r.narrative.status !== 'active')
+  const dormant = rows.filter(r => r.narrative.status === 'dormant')
+  const closed  = rows.filter(r => r.narrative.status === 'closed')
 
   return (
     <div className="max-w-4xl">
-      <PageHeader
-        crumbs={['Output', 'Narratives']}
-        stats={[
-          { n: active.length,  label: 'active',  accent: active.length > 0 },
-          { n: dormant.length, label: 'dormant' },
-        ]}
-        actions={<CreateNarrativeForm />}
-      />
+      <div className="px-8 pt-8 pb-4">
+        <div className="bg-[#0f0f0f] rounded-lg border border-[#00e05a22] px-5 py-4">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-baseline gap-4">
+              {[
+                { n: active.length,  label: 'active',  accent: active.length > 0 },
+                { n: dormant.length, label: 'dormant' },
+                { n: closed.length,  label: 'closed'  },
+              ].map(({ n, label, accent }) => (
+                <div key={label} className="flex items-baseline gap-1">
+                  <span className={`text-lg font-semibold tabular-nums leading-none ${accent ? 'text-[#00e05a]' : 'text-[#007830]'}`}>{n}</span>
+                  <span className="text-[10px] text-[#006025] uppercase tracking-wide">{label}</span>
+                </div>
+              ))}
+            </div>
+            <CreateNarrativeForm />
+          </div>
+        </div>
+      </div>
 
       <div className="px-8 pb-8 space-y-6">
 
@@ -61,9 +72,19 @@ export default async function NarrativesPage() {
 
             {dormant.length > 0 && (
               <section>
-                <h2 className="text-[10px] font-semibold text-[#006025] uppercase tracking-widest mb-2">Dormant · Closed</h2>
+                <h2 className="text-[10px] font-semibold text-[#006025] uppercase tracking-widest mb-2">Dormant</h2>
                 <div className="space-y-2 opacity-50">
                   {dormant.map(({ narrative, insightCount }) => (
+                    <NarrativeRow key={narrative.id} narrative={narrative} insightCount={insightCount} />
+                  ))}
+                </div>
+              </section>
+            )}
+            {closed.length > 0 && (
+              <section>
+                <h2 className="text-[10px] font-semibold text-[#006025] uppercase tracking-widest mb-2">Closed</h2>
+                <div className="space-y-2 opacity-30">
+                  {closed.map(({ narrative, insightCount }) => (
                     <NarrativeRow key={narrative.id} narrative={narrative} insightCount={insightCount} />
                   ))}
                 </div>

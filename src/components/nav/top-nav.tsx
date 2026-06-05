@@ -4,14 +4,15 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 interface NavCounts {
-  pipeline: number
-  curate:   number
+  pipeline:   number
+  curate:     number
+  narratives: number
 }
 
 const TABS = [
-  { href: '/pipeline',   label: 'Pipeline',   countKey: 'pipeline' as const },
-  { href: '/insights',   label: 'Review',     countKey: 'curate'   as const },
-  { href: '/narratives', label: 'Narratives', countKey: null },
+  { href: '/pipeline',   label: 'Pipeline',   countKey: 'pipeline'   as const },
+  { href: '/insights',   label: 'Review',     countKey: 'curate'     as const },
+  { href: '/narratives', label: 'Narratives', countKey: 'narratives' as const },
   { href: '/digest',     label: 'Digest',     countKey: null },
 ]
 

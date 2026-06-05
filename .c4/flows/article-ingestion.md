@@ -21,24 +21,23 @@ The lifecycle of an article from RSS discovery through content retrieval, LLM pr
           creates articles in bulk
                     │
                     ▼
-                discovered
+                discovered ──[Archive]──┐
+                    │                   │
+               [Fetch]                  │
+                    │                   ▼
+                 fetched ─────[Archive]─►archived
+                    │                  (terminal)
+               [Process]
                     │
-       ┌────────────┼────────────┐
-  [Fetch]  [Mark paywalled]  [Mark failed]
-       │         │                │
-       ▼         ▼                ▼
-    fetched   paywalled         failed
-       │      (terminal)      (terminal)
-  [Process]
-       │
-       ▼
-   processed
-       │
-   [Archive]
-       │
-       ▼
-    archived
-   (terminal)
+                 processed ──[Archive]──►
+                    │
+              ↑ [Re-analyse with confirm]
+
+     paywalled ──[Re-gather]──► fetched
+               ──[Archive]────► archived
+
+       failed  ──[Re-gather]──► fetched
+               ──[Archive]────► archived
 ```
 
 ## Transition definitions
@@ -46,19 +45,25 @@ The lifecycle of an article from RSS discovery through content retrieval, LLM pr
 | From | To | Allowed roles | Required inputs | Label |
 |------|----|---------------|-----------------|-------|
 | *(gather action)* | `discovered` | researcher | — | Gather (bulk create) |
-| `discovered` | `fetched` | researcher | — | Fetch |
-| `discovered` | `paywalled` | researcher | — | Mark as paywalled |
-| `discovered` | `failed` | researcher | — | Mark as failed |
-| `fetched` | `processed` | researcher | — | Process |
-| `fetched` | `paywalled` | researcher | — | Mark as paywalled |
-| `fetched` | `failed` | researcher | — | Mark as failed |
+| `discovered` | `fetched` | researcher | — | Fetch / Gather |
+| `fetched` | `processed` | researcher | — | Analyse |
+| `processed` | `processed` | researcher | confirmation dialog | Re-analyse |
+| `paywalled` | `fetched` | researcher | — | Re-gather |
+| `failed` | `fetched` | researcher | — | Re-gather |
+| `discovered` | `archived` | researcher | — | Archive |
+| `fetched` | `archived` | researcher | — | Archive |
 | `processed` | `archived` | researcher | — | Archive |
+| `paywalled` | `archived` | researcher | — | Archive |
+| `failed` | `archived` | researcher | — | Archive |
+
+> **Note:** `markPaywalled` and `markFailed` manual transitions were removed (2026-06-04). Paywalled/failed status is now system-set only (thin content detection on gather, or future auto-detection). Re-gather lets researchers retry paywalled/failed articles without creating a new instance.
 
 ## Validation rules
 
-- `paywalled` and `failed` are terminal — no transition out. A researcher who resolves access creates a new article instance rather than un-terminating the old one.
-- `archived` is terminal.
-- `processed` → `processed` re-processing is allowed (triggers a new analysis run, appends new insights) — confirmed via BDD D.2.2 with a warning confirmation.
+- `archived` is terminal — no transition out.
+- `paywalled` and `failed` are recoverable via Re-gather (`fetch` action). If a second gather attempt also fails, the article returns to the same status with an updated `gatherFailCount`.
+- `processed` → `processed` re-processing is allowed (appends new insights, does not delete existing ones) — requires a confirmation dialog (BDD D.2.2).
+- Fail counts are tracked in article `data` JSONB: `gatherFailCount`, `gatherErrors[]`, `analyseFailCount`, `analyseErrors[]`. Use these to surface retry history to the researcher.
 - A transition is invalid if the actor's role is not `researcher`.
 
 ## The gather action
@@ -95,9 +100,15 @@ The process transition (fetched → processed):
 
 ## Deferred extensions
 
-- **Batch actions**: "Fetch all discovered", "Process all fetched" — in scope per ADR-001 but not yet specced. Track via 🟠 in `docs/blueprint.md`.
+- **Scrape-mode discover**: Sources with `feedType = 'scrape'` need a different gather path (HTML page crawl for article links). Specced in `specs/2026-06-04-smart-feed-discovery/spec.md` Step F. Requires robots.txt compliance before shipping.
 - **Automated retry**: If fetch fails, auto-retry after N minutes. Not in scope for v1 — all retries are user-initiated.
 - **Webhook / push ingestion**: Sources push new articles rather than being polled. Architectural extension — see `design/` if pursued.
+
+## Built extensions (2026-06-04/05)
+
+- **Bulk gather / analyse / archive**: Checkbox selection in article queue; sequential processing with progress. `discovered` → bulk Gather, `fetched` → bulk Analyse, `paywalled`/`failed` → bulk Re-gather, any → bulk Archive.
+- **Smart discover with high-water mark**: `lastDiscoveredAt` on sources; incremental scanning (only days since last run + 1 buffer) unless `force=true`.
+- **Feed auto-discovery**: `POST /api/sources/resolve-feed` resolves any URL to the best feedable form — Substack profiles, HTML autodiscovery, platform patterns, generic suffix probes.
 
 ## Agent change protocol
 

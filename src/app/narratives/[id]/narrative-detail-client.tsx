@@ -4,11 +4,14 @@ import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStore } from '@/lib/store'
 
+type DormantMode = null | 'chooser' | 'fold' | 'split'
+
 interface LinkedInsight {
   linkId: string
   insightId: string
   insightText: string
   insightQuote: string | null
+  insightStatus: string
   insightPerspective: string
   insightTags: string[]
   insightModel: string | null
@@ -37,6 +40,12 @@ interface AvailableInsight {
   articleDate: string
 }
 
+interface OtherNarrative {
+  id: string
+  title: string
+  status: string
+}
+
 interface Props {
   narrative: Narrative
   linkedInsights: LinkedInsight[]
@@ -58,6 +67,13 @@ export function NarrativeDetailClient({ narrative, linkedInsights }: Props) {
   const [editTitle, setEditTitle] = useState(narrative.title)
   const [editDesc, setEditDesc] = useState(narrative.description ?? '')
   const [saving, setSaving] = useState(false)
+
+  // --- Dormant flow state ---
+  const [dormantMode, setDormantMode] = useState<DormantMode>(null)
+  const [dormantLoading, setDormantLoading] = useState(false)
+  const [otherNarratives, setOtherNarratives] = useState<OtherNarrative[]>([])
+  const [foldTargetId, setFoldTargetId] = useState('')
+  const [splitTitles, setSplitTitles] = useState<[string, string]>(['', ''])
 
   // --- Add evidence state ---
   const [evidenceOpen, setEvidenceOpen] = useState(false)
@@ -108,6 +124,71 @@ export function NarrativeDetailClient({ narrative, linkedInsights }: Props) {
     })
     router.refresh()
   }, [narrative.id, router])
+
+  const openDormantChooser = useCallback(async () => {
+    setDormantMode('chooser')
+    const res = await fetch('/api/narratives')
+    const all = await res.json() as OtherNarrative[]
+    setOtherNarratives(all.filter(n => n.id !== narrative.id && n.status === 'active'))
+  }, [narrative.id])
+
+  const handlePause = useCallback(async () => {
+    setDormantLoading(true)
+    try {
+      await fetch(`/api/narratives/${narrative.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'dormant' }),
+      })
+      setDormantMode(null)
+      router.refresh()
+    } finally {
+      setDormantLoading(false)
+    }
+  }, [narrative.id, router])
+
+  const handleFoldInto = useCallback(async () => {
+    if (!foldTargetId) return
+    setDormantLoading(true)
+    try {
+      await fetch(`/api/narratives/${narrative.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'closed', parentId: foldTargetId }),
+      })
+      router.push('/narratives')
+    } finally {
+      setDormantLoading(false)
+    }
+  }, [narrative.id, foldTargetId, router])
+
+  const handleSplitInto = useCallback(async () => {
+    const [t1, t2] = splitTitles
+    if (!t1.trim() || !t2.trim()) return
+    setDormantLoading(true)
+    try {
+      await Promise.all([
+        fetch('/api/narratives', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: t1.trim(), parentId: narrative.id }),
+        }),
+        fetch('/api/narratives', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: t2.trim(), parentId: narrative.id }),
+        }),
+      ])
+      await fetch(`/api/narratives/${narrative.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'closed' }),
+      })
+      router.push('/narratives')
+    } finally {
+      setDormantLoading(false)
+    }
+  }, [narrative.id, splitTitles, router])
 
   const handleLink = useCallback(async (insightId: string) => {
     setLinkingId(insightId)
@@ -208,15 +289,115 @@ export function NarrativeDetailClient({ narrative, linkedInsights }: Props) {
                 created {narrative.createdAt.slice(0, 10)}
               </span>
               {isResearcher && (
-                <div className="flex gap-2 ml-2">
-                  {narrative.status === 'active' && (
-                    <button
-                      onClick={() => handleStatusChange('dormant')}
-                      className="text-[10px] border border-[#00e05a22] text-[#555] px-2 py-1 rounded hover:border-[#00e05a44]"
-                    >
-                      Mark dormant
-                    </button>
+                <div className="ml-2">
+                  {narrative.status === 'active' && dormantMode === null && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={openDormantChooser}
+                        className="text-[10px] border border-[#00e05a22] text-[#555] px-2 py-1 rounded hover:border-[#00e05a44]"
+                      >
+                        Mark dormant
+                      </button>
+                      <button
+                        onClick={() => handleStatusChange('closed')}
+                        className="text-[10px] border border-[#00e05a22] text-[#006025] px-2 py-1 rounded hover:border-[#00e05a44]"
+                      >
+                        Close
+                      </button>
+                    </div>
                   )}
+
+                  {narrative.status === 'active' && dormantMode === 'chooser' && (
+                    <div className="bg-[#0f0f0f] border border-[#00e05a22] rounded-lg px-4 py-3 mt-2 space-y-2 max-w-sm">
+                      <p className="text-[10px] text-[#006025] uppercase tracking-wide mb-1">Why is this going dormant?</p>
+                      <button
+                        onClick={handlePause}
+                        disabled={dormantLoading}
+                        className="w-full text-left text-xs text-[#00a040] hover:text-[#00e05a] py-1 disabled:opacity-50"
+                      >
+                        Pause — may revive later
+                      </button>
+                      <button
+                        onClick={() => setDormantMode('fold')}
+                        disabled={dormantLoading}
+                        className="w-full text-left text-xs text-[#00a040] hover:text-[#00e05a] py-1 disabled:opacity-50"
+                      >
+                        Fold into another narrative →
+                      </button>
+                      <button
+                        onClick={() => setDormantMode('split')}
+                        disabled={dormantLoading}
+                        className="w-full text-left text-xs text-[#00a040] hover:text-[#00e05a] py-1 disabled:opacity-50"
+                      >
+                        Split into two narratives →
+                      </button>
+                      <button
+                        onClick={() => setDormantMode(null)}
+                        className="text-[10px] text-[#555] hover:text-[#777] pt-1"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+
+                  {narrative.status === 'active' && dormantMode === 'fold' && (
+                    <div className="bg-[#0f0f0f] border border-[#00e05a22] rounded-lg px-4 py-3 mt-2 space-y-2 max-w-sm">
+                      <p className="text-[10px] text-[#006025] uppercase tracking-wide mb-1">Fold into</p>
+                      {otherNarratives.length === 0 ? (
+                        <p className="text-xs text-[#555]">No other active narratives.</p>
+                      ) : (
+                        <select
+                          value={foldTargetId}
+                          onChange={e => setFoldTargetId(e.target.value)}
+                          className="w-full bg-[#0a0a0a] border border-[#00e05a33] rounded px-2 py-1.5 text-xs text-[#00a040] outline-none"
+                        >
+                          <option value="">Select narrative…</option>
+                          {otherNarratives.map(n => (
+                            <option key={n.id} value={n.id}>{n.title}</option>
+                          ))}
+                        </select>
+                      )}
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          onClick={handleFoldInto}
+                          disabled={dormantLoading || !foldTargetId}
+                          className="text-xs bg-[#00e05a] text-[#0a0a0a] font-semibold px-3 py-1 rounded disabled:opacity-50"
+                        >
+                          {dormantLoading ? 'Folding…' : 'Fold & close'}
+                        </button>
+                        <button onClick={() => setDormantMode('chooser')} className="text-[10px] text-[#555] hover:text-[#777]">Back</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {narrative.status === 'active' && dormantMode === 'split' && (
+                    <div className="bg-[#0f0f0f] border border-[#00e05a22] rounded-lg px-4 py-3 mt-2 space-y-2 max-w-sm">
+                      <p className="text-[10px] text-[#006025] uppercase tracking-wide mb-1">Split into two new narratives</p>
+                      <input
+                        className="w-full bg-[#0a0a0a] border border-[#00e05a22] rounded px-2 py-1.5 text-xs text-[#00e05a] placeholder-[#006025] outline-none focus:border-[#00e05a44]"
+                        placeholder="First narrative title"
+                        value={splitTitles[0]}
+                        onChange={e => setSplitTitles([e.target.value, splitTitles[1]])}
+                      />
+                      <input
+                        className="w-full bg-[#0a0a0a] border border-[#00e05a22] rounded px-2 py-1.5 text-xs text-[#00e05a] placeholder-[#006025] outline-none focus:border-[#00e05a44]"
+                        placeholder="Second narrative title"
+                        value={splitTitles[1]}
+                        onChange={e => setSplitTitles([splitTitles[0], e.target.value])}
+                      />
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          onClick={handleSplitInto}
+                          disabled={dormantLoading || !splitTitles[0].trim() || !splitTitles[1].trim()}
+                          className="text-xs bg-[#00e05a] text-[#0a0a0a] font-semibold px-3 py-1 rounded disabled:opacity-50"
+                        >
+                          {dormantLoading ? 'Splitting…' : 'Split & close'}
+                        </button>
+                        <button onClick={() => setDormantMode('chooser')} className="text-[10px] text-[#555] hover:text-[#777]">Back</button>
+                      </div>
+                    </div>
+                  )}
+
                   {narrative.status === 'dormant' && (
                     <button
                       onClick={() => handleStatusChange('active')}
@@ -225,10 +406,10 @@ export function NarrativeDetailClient({ narrative, linkedInsights }: Props) {
                       Reactivate
                     </button>
                   )}
-                  {narrative.status !== 'closed' && (
+                  {narrative.status === 'dormant' && (
                     <button
                       onClick={() => handleStatusChange('closed')}
-                      className="text-[10px] border border-[#00e05a22] text-[#006025] px-2 py-1 rounded hover:border-[#00e05a44]"
+                      className="text-[10px] border border-[#00e05a22] text-[#006025] px-2 py-1 ml-2 rounded hover:border-[#00e05a44]"
                     >
                       Close
                     </button>
@@ -318,7 +499,13 @@ export function NarrativeDetailClient({ narrative, linkedInsights }: Props) {
         <div className="space-y-3">
           {linkedInsights.map(item => (
             <div key={item.linkId} className="bg-[#0f0f0f] rounded-lg border border-[#00e05a22] px-5 py-4">
-              <p className="text-sm text-[#00e05a] leading-relaxed mb-3">{item.insightText}</p>
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <p className="text-sm text-[#00e05a] leading-relaxed flex-1">{item.insightText}</p>
+                {item.insightStatus === 'curated'
+                  ? <span className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-[#00e05a] text-[#0a0a0a] shrink-0 mt-0.5">reviewed</span>
+                  : <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded border border-[#00e05a22] text-[#006025] shrink-0 mt-0.5">extracted</span>
+                }
+              </div>
               {item.insightQuote && (
                 <blockquote className="pl-3 border-l-2 border-[#00e05a33] text-xs text-[#00a040] italic mb-3">
                   {item.insightQuote}

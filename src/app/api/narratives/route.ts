@@ -13,7 +13,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const { title, description } = await req.json() as { title: string; description?: string }
+  const { title, description, parentId } = await req.json() as { title: string; description?: string; parentId?: string }
   if (!title?.trim()) return NextResponse.json({ error: 'title required' }, { status: 400 })
 
   const [row] = await db.insert(narratives).values({
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     title: title.trim(),
     description: description?.trim() || null,
     status: 'active',
-    parentId: null,
+    parentId: parentId ?? null,
   }).returning()
 
   return NextResponse.json(row, { status: 201 })

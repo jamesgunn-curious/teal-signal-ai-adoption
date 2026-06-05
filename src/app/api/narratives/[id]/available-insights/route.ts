@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/db'
 import { insights, articles, narrativeInsights } from '@/db/schema'
-import { eq, and, isNull, desc } from 'drizzle-orm'
+import { eq, and, isNull, desc, inArray } from 'drizzle-orm'
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: narrativeId } = await params
 
-  // Curated insights NOT already linked to this narrative
+  // Curated and extracted insights NOT already linked to this narrative
   const rows = await db
     .select({
       insightId:     insights.id,
@@ -27,7 +27,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       ),
     )
     .where(and(
-      eq(insights.status, 'curated'),
+      inArray(insights.status, ['curated', 'extracted']),
       isNull(narrativeInsights.insightId),
     ))
     .orderBy(desc(articles.publishedDate))

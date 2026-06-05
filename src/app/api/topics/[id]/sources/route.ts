@@ -12,7 +12,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: topicId } = await params
   const body = await req.json()
-  const { slug, name, feedUrl, perspective, tier, accessType = 'free' } = body
+  const { slug, name, feedUrl, feedType = 'rss', perspective, tier, accessType = 'free' } = body
 
   if (!slug || !name || !feedUrl || !perspective || !tier) {
     return NextResponse.json({ error: 'slug, name, feedUrl, perspective, tier required' }, { status: 400 })
@@ -24,6 +24,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     slug,
     name,
     feedUrl,
+    feedType,
     perspective,
     tier,
     accessType,

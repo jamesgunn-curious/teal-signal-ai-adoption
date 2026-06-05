@@ -95,14 +95,34 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   const check = validateTransition(articleIngestionFlow, article.status as ArticleStatus, 'process', 'researcher')
   if (!check.valid) return NextResponse.json({ error: check.reason }, { status: 422 })
 
+  const existingData = article.data as ArticleData
   const analyseStartedAt = new Date().toISOString()
-  const result = useLocal
-    ? await extractInsightsLocal(article.fullText, article.wordCount)
-    : await extractInsightsClaude(article.fullText)
+
+  let result: ProcessResult
+  try {
+    result = useLocal
+      ? await extractInsightsLocal(article.fullText, article.wordCount)
+      : await extractInsightsClaude(article.fullText)
+  } catch (err) {
+    const analyseError = err instanceof Error ? err.message : String(err)
+    const prevErrors = existingData.analyseErrors ?? []
+    await db.update(articles)
+      .set({
+        data: {
+          ...existingData,
+          analyseError,
+          analyseFailCount: (existingData.analyseFailCount ?? 0) + 1,
+          analyseErrors: [...prevErrors, analyseError],
+        },
+        updatedAt: new Date(),
+      })
+      .where(eq(articles.id, id))
+    return NextResponse.json({ error: analyseError }, { status: 500 })
+  }
+
   const analyseCompletedAt = new Date().toISOString()
   const analyseDurationMs = new Date(analyseCompletedAt).getTime() - new Date(analyseStartedAt).getTime()
 
-  const existingData = article.data as ArticleData
   const { analyseError: _cleared, ...cleanData } = existingData
   const updatedData: ArticleData = {
     ...cleanData,

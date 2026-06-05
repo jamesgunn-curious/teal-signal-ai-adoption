@@ -44,6 +44,7 @@ export default async function NarrativeDetailPage({
       insightQuote: insight.quote ?? null,
       insightPerspective: insight.perspective,
       insightTags: insight.tags,
+      insightStatus: insight.status,
       insightModel: insight.model ?? null,
       articleTitle: data.title ?? null,
       articleUrl,
@@ -67,7 +68,8 @@ export default async function NarrativeDetailPage({
         crumbs={['Output', 'Narratives']}
         back={{ label: 'All narratives', href: '/narratives' }}
         stats={[
-          { n: linkedInsights.length, label: 'insights', accent: linkedInsights.length > 0 },
+          { n: linkedInsights.length,                                              label: 'insights', accent: linkedInsights.length > 0 },
+          { n: linkedInsights.filter(i => i.insightStatus === 'curated').length,   label: 'reviewed' },
         ]}
       />
       <NarrativeDetailClient

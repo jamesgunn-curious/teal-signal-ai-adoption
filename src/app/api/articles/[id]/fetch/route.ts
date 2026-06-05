@@ -40,29 +40,39 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
   const existingData = article.data as ArticleData
 
+  function recordGatherFail(msg: string) {
+    const prev = existingData.gatherErrors ?? []
+    return {
+      ...existingData,
+      fetchError: msg,
+      gatherFailCount: (existingData.gatherFailCount ?? 0) + 1,
+      gatherErrors: [...prev, msg],
+    }
+  }
+
   let fetchResult: Awaited<ReturnType<typeof fetchArticleContent>>
   try {
     fetchResult = await fetchArticleContent(article.url)
   } catch (err) {
-    // Stay in discovered with error recorded in data (spec C.2.2)
+    const msg = err instanceof Error ? err.message : String(err)
     const [updated] = await db.update(articles)
-      .set({ data: { ...existingData, fetchError: String(err) }, updatedAt: new Date() })
+      .set({ data: recordGatherFail(msg), updatedAt: new Date() })
       .where(eq(articles.id, id))
       .returning()
-    return NextResponse.json({ article: updated, error: String(err) }, { status: 200 })
+    return NextResponse.json({ article: updated, error: msg }, { status: 200 })
   }
 
   if (fetchResult.wordCount < 150) {
-    // Thin content — likely paywalled or blocked. Stay in discovered (spec C.2.2)
+    const msg = `thin content (${fetchResult.wordCount} words)`
     const [updated] = await db.update(articles)
       .set({
         wordCount: fetchResult.wordCount,
-        data: { ...existingData, fetchError: `thin content (${fetchResult.wordCount} words)`, accessLevel: fetchResult.accessLevel },
+        data: { ...recordGatherFail(msg), accessLevel: fetchResult.accessLevel },
         updatedAt: new Date(),
       })
       .where(eq(articles.id, id))
       .returning()
-    return NextResponse.json({ article: updated, error: 'thin content' }, { status: 200 })
+    return NextResponse.json({ article: updated, error: msg }, { status: 200 })
   }
 
   const { wordCount: _removed, ...cleanData } = existingData as ArticleData & { wordCount?: number }

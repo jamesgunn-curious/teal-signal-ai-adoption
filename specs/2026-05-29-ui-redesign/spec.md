@@ -59,24 +59,24 @@ All items implemented and verified. See build-plan.md.
 
 ---
 
-## Phase 5 — Bulk selection + contextual action bar
+## Phase 5 — Bulk selection + contextual action bar ✅
 
-❌ Add checkbox selection to article rows in `src/app/articles/page.tsx`
-❌ Contextual bulk action bar slides in on selection (fetch / analyse / clear)
-❌ Move BulkActions off dashboard, into article queue
-❌ Sequential progress feedback during batch operations
+✅ Checkbox selection on article rows in `src/components/pipeline/article-queue.tsx`
+✅ Contextual bulk action bar slides in on selection (Gather selected / Analyse selected / Archive selected)
+✅ BulkActions removed from dashboard; all bulk ops in PipelineBar + ArticleQueue
+✅ Sequential progress feedback during batch operations (showing N/M count)
 
-🟠 **D3 resolved:** Use thin `ArticleQueueClient` wrapper — keeps data fetching server-side, client wrapper holds selection state
+✅ **D3:** `PipelineContent` client wrapper holds source filter + selection state; server page fetches data
 
 ---
 
-## Phase 6 — Article detail + insight interaction screen
+## Phase 6 — Article detail + insight interaction screen ✅
 
-❌ `src/app/articles/[id]/page.tsx` — article metadata, content, per-article insights
-❌ PageHeader with back → Article queue, article stats
-❌ Inline fetch / analyse / archive actions
-❌ Insight list with inline review (mark as reviewed, add to narrative, dismiss)
-❌ Article titles in queue become links to detail screen
+✅ `src/app/articles/[id]/page.tsx` — article metadata, full text (scrollable), per-article insights
+✅ PageHeader with back → Pipeline, stats (word count, insight count, analyse duration)
+✅ Inline fetch / analyse / re-analyse (with confirmation) / archive actions
+✅ Insight list with inline review (curate/dismiss/+narrative), reviewed/extracted badges, narrative badges
+✅ Article titles in queue become links to detail screen; external URL kept as ↗ icon
 
 ---
 
@@ -97,13 +97,11 @@ All items implemented and verified. See build-plan.md.
 - `src/app/narratives/[id]/page.tsx` — narrative detail, insights timeline
 - "+ Narrative" button on Review screen insight actions
 
-**Still to build:**
-❌ Archive / resolve narrative action
-❌ Edit narrative title/description inline
-❌ Split narrative (one → two, parentId set on children)
-❌ Converge narratives (two → one)
-❌ Add insight to narrative from article detail screen (Phase 6)
-❌ Narrative count badge in nav tab
+**Built:**
+✅ Dormant transition: pause / fold-into / split-into (replaces archive/resolve + split/converge)
+✅ Edit narrative title/description inline
+✅ Add insight to narrative from article detail screen (via InsightActions on detail page)
+✅ Narrative count badge in nav tab (active narratives)
 
 ---
 
@@ -114,11 +112,11 @@ All items implemented and verified. See build-plan.md.
 - Both `bulk-analyse` and single `process` routes write model name on insert
 - Model shown in Digest and Narrative detail
 
-**Insight flow — extracted usable without review:** ✅ (Digest) / ❌ (full)
+**Insight flow — extracted usable without review:** ✅
 - ✅ Digest shows `extracted` + `curated` insights (not just curated)
-- ✅ Visual distinction: `curated` insights get a "reviewed" badge
-- ❌ Review screen: make explicit that review is optional enrichment, not a gate
-- ❌ Narratives: can attach `extracted` insights directly (works via API, no UI gate)
+- ✅ Visual distinction: `curated` insights get a "reviewed" badge; `extracted` shown dimmer
+- ✅ Review screen: optional-enrichment note in summary bar
+- ✅ Narratives: available-insights API now returns `extracted` + `curated` (no UI gate on review)
 
 ---
 

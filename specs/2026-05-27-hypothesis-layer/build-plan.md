@@ -8,7 +8,7 @@
 |------|-------|--------|
 | All narrative features (H.1.4–H.5) | ✅ Built and G3 verified | — |
 | Sequential analyse queue | ✅ Built | — |
-| `.c4/README.md` entity index | ❌ Step 7 | Add Narrative row to entity type table — 2 minutes |
+| `.c4/README.md` entity index | ✅ Step 7 | Narrative row added to entity type table |
 | SDD traceability finding | 📝 Noted | `TaskCreate` is session-only; build plan rows are the durable record. Agent tasks should update this table before session close. |
 
 **Next session:** Start with Step 7 (README), then decide if any narrative features need visual verification in browser (H.2.3 badges, H.2.1 inline picker UX). After that, the section is ready to ship.
@@ -67,7 +67,7 @@ G3 obligation: advisory — run both checks before marking section complete.
 |------|-----------|-------|-------|--------|-------|
 | 5 — Narrative detail client | H.1.4–H.1.6, H.2.1, H.2.4, H.3.1, H.3.2, H.5 | cell-agent/narrative-detail | `src/app/narratives/[id]/narrative-detail-client.tsx` (created), `src/app/narratives/[id]/page.tsx` (modified) | ✅ | Used `useStore` (actual export) not `useRoleStore` |
 | 6 — Insight card badges | H.2.3 | cell-agent/insights | `src/app/insights/page.tsx` | ✅ | Server-side DB join; badges render only on curated cards |
-| 7 — README entity index | — | inline | `.c4/README.md` | ❌ | Not yet done |
+| 7 — README entity index | — | inline | `.c4/README.md` | ✅ | Narrative row added to entity type table |
 
 ### Separate workstream — Sequential analyse queue
 
@@ -119,7 +119,7 @@ Note: `analyseDurationMs` is a dedicated integer column (ADR-007), not in JSONB 
 
 Result: **PASS**. All H.1.4–H.5 spec items verified against live API and server-rendered pages. Single article analyse confirmed working (70s, local LLM qwen2.5:7b, 3 insights extracted, `analyseDurationMs` stored correctly as dedicated column).
 
-One finding: H.2.3 (narrative badges) not verifiable via API alone — implemented server-side. H.7 (README entity index) still ❌.
+One finding: H.2.3 (narrative badges) not verifiable via API alone — implemented server-side. H.7 (README entity index) ✅ completed 2026-06-05.
 
 ---
 

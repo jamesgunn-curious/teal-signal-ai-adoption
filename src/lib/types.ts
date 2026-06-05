@@ -3,6 +3,7 @@ export type ArticleStatus = 'discovered' | 'fetched' | 'processed' | 'archived' 
 export type InsightStatus = 'extracted' | 'curated' | 'dismissed'
 export type TopicStatus = 'active' | 'archived'
 export type SourceStatus = 'active' | 'paused' | 'removed'
+export type FeedType = 'rss' | 'scrape'
 export type NarrativeStatus = 'active' | 'dormant' | 'closed'
 
 export type Perspective = 'practitioner' | 'leadership' | 'product' | 'research' | 'editorial'
@@ -19,11 +20,15 @@ export interface ArticleData {
   accessLevel?: AccessLevel
   executiveSummary?: string
   tags: string[]
-  fetchError?: string      // set when gather fails or content is thin; article stays in discovered
-  analyseError?: string    // set when analysis fails; article stays in fetched for retry
-  analyseStartedAt?: string    // ISO timestamp — set at start of LLM call
-  analyseCompletedAt?: string  // ISO timestamp — set on success
-  analyseDurationMs?: number   // wall-clock ms for the LLM call; stored in JSONB per spec Phase 2
+  fetchError?: string       // most recent gather error; article stays in discovered
+  gatherFailCount?: number  // total gather attempts that failed
+  gatherErrors?: string[]   // history of all gather error messages
+  analyseError?: string     // most recent analyse error; article stays in fetched
+  analyseFailCount?: number // total analyse attempts that failed
+  analyseErrors?: string[]  // history of all analyse error messages
+  analyseStartedAt?: string
+  analyseCompletedAt?: string
+  analyseDurationMs?: number
 }
 
 export interface ArticleInstance {

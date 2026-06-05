@@ -216,10 +216,19 @@
 }
 .status-archived {
   --sc-bg: #111;
-  --sc-border: #2a2a2a;
-  --sc-text: #555;
-  --sc-texture: radial-gradient(circle, rgba(100,100,100,0.2) 1px, transparent 1px);
+  --sc-border: #383838;
+  --sc-text: #888;
+  --sc-texture: radial-gradient(circle, rgba(150,150,150,0.2) 1px, transparent 1px);
   --sc-texture-size: 5px 5px;
+}
+
+/* Filter pill selected state — inverts chip: text colour becomes background, dark text on top.
+   Follows the same "filled pill" convention as the All filter button. */
+.filter-pill-active .status-chip {
+  --sc-bg: var(--sc-text);
+  --sc-text: #0a0a0a;
+  --sc-border: transparent;
+  --sc-texture: none;
 }
 
 /* Insight statuses */

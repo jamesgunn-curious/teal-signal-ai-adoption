@@ -33,10 +33,11 @@ Read this first. This folder contains everything an agent needs to understand th
 
 | Entity type | Manifest | Flow |
 |-------------|----------|------|
-| Article | `.c4/entities/article.md` | article-ingestion |
-| Insight | `.c4/entities/insight.md` | insight-curation |
-| Topic | `.c4/entities/topic.md` | (no workflow) |
-| Source | `.c4/entities/source.md` | (no workflow) |
+| Article   | `.c4/entities/article.md`   | article-ingestion |
+| Insight   | `.c4/entities/insight.md`   | insight-curation  |
+| Narrative | `.c4/entities/narrative.md` | (inline — no Teal Flow type; dormant transition has pause/fold/split options) |
+| Topic     | `.c4/entities/topic.md`     | (no workflow)     |
+| Source    | `.c4/entities/source.md`    | (no workflow)     |
 
 ## Flow types
 

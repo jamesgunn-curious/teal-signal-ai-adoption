@@ -5,7 +5,6 @@ import type { InsightStatus, Perspective } from '@/lib/types'
 import { InsightActions } from './insight-actions'
 import { StatusChip } from '@/components/ui/status-chip'
 import { INSIGHT_TOKENS } from '@/lib/status-tokens'
-import { PageHeader } from '@/components/ui/page-header'
 
 const PERSPECTIVE_COLOURS: Record<Perspective, string> = {
   practitioner: 'bg-blue-950 border border-blue-800 text-blue-400',
@@ -74,14 +73,40 @@ export default async function InsightsPage({
 
   return (
     <div className="max-w-4xl">
-      <PageHeader
-        crumbs={['Workflow', 'Review']}
-        stats={[
-          { n: extracted, label: 'to review', accent: extracted > 0 },
-          { n: curated,   label: 'curated' },
-          { n: dismissed, label: 'dismissed' },
-        ]}
-      />
+      <div className="px-8 pt-8 pb-4">
+        <div className="bg-[#0f0f0f] rounded-lg border border-[#00e05a22] px-5 py-4">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            {/* Counts */}
+            <div className="flex items-baseline gap-4">
+              {[
+                { n: extracted, label: 'to review', accent: extracted > 0 },
+                { n: curated,   label: 'reviewed' },
+                { n: dismissed, label: 'dismissed' },
+              ].map(({ n, label, accent }) => (
+                <div key={label} className="flex items-baseline gap-1">
+                  <span className={`text-lg font-semibold tabular-nums leading-none ${accent ? 'text-[#00e05a]' : 'text-[#007830]'}`}>{n}</span>
+                  <span className="text-[10px] text-[#006025] uppercase tracking-wide">{label}</span>
+                </div>
+              ))}
+            </div>
+            {/* Status filter pills */}
+            <div className="flex gap-2">
+              {(['extracted', 'curated', 'dismissed'] as InsightStatus[]).map(s => (
+                <a
+                  key={s}
+                  href={articleId ? `/insights?status=${s}&articleId=${articleId}` : `/insights?status=${s}`}
+                  className={`transition-opacity ${activeStatus === s ? 'opacity-100 ring-1 ring-white/20 rounded-full' : 'opacity-50 hover:opacity-80'}`}
+                >
+                  <StatusChip status={s} label={`${INSIGHT_TOKENS[s].label} ${countMap[s] ?? 0}`} />
+                </a>
+              ))}
+            </div>
+          </div>
+          <p className="text-xs text-[#006025] mt-3">
+            Review is optional — insights reach Digest and Narratives regardless. Reviewing marks them as trustworthy evidence.
+          </p>
+        </div>
+      </div>
       <div className="px-8 pb-8">
       {articleId && (
         <p className="text-xs text-[#006025] mb-4">
@@ -89,18 +114,6 @@ export default async function InsightsPage({
           <a href="/insights" className="underline hover:text-[#00a040]">Clear</a>
         </p>
       )}
-
-      <div className="flex gap-2 mb-6">
-        {(['extracted', 'curated', 'dismissed'] as InsightStatus[]).map(s => (
-          <a
-            key={s}
-            href={articleId ? `/insights?status=${s}&articleId=${articleId}` : `/insights?status=${s}`}
-            className={`transition-opacity ${activeStatus === s ? 'opacity-100 ring-1 ring-white/20 rounded-full' : 'opacity-60 hover:opacity-90'}`}
-          >
-            <StatusChip status={s} label={INSIGHT_TOKENS[s].label} />
-          </a>
-        ))}
-      </div>
 
       {rows.length === 0 ? (
         <p className="text-neutral-400 text-sm">

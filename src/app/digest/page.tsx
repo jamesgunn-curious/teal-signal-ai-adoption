@@ -3,7 +3,6 @@ import { insights, articles, sources } from '@/db/schema'
 import { eq, inArray } from 'drizzle-orm'
 import type { Perspective, ArticleData } from '@/lib/types'
 import { DigestFilters } from './digest-filters'
-import { PageHeader } from '@/components/ui/page-header'
 
 const DIGEST_SECTIONS = [
   { label: 'Problem selection & design',   tags: ['right-problem', 'prioritisation', 'differentiation'] },
@@ -51,18 +50,33 @@ export default async function DigestPage({
     filtered.some(({ insight }) => insight.tags.some(t => s.tags.includes(t)))
   ).length
 
+  const reviewedCount = rows.filter(r => r.insight.status === 'curated').length
+
   return (
     <div className="max-w-4xl">
-      <PageHeader
-        crumbs={['Output', 'Digest']}
-        stats={[
-          { n: rows.length,    label: 'curated',  accent: rows.length > 0 },
-          { n: activeSections, label: 'sections' },
-        ]}
-      />
+      <div className="px-8 pt-8 pb-4">
+        <div className="bg-[#0f0f0f] rounded-lg border border-[#00e05a22] px-5 py-4">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-baseline gap-4">
+              {[
+                { n: rows.length,    label: 'insights', accent: rows.length > 0 },
+                { n: reviewedCount,  label: 'reviewed' },
+                { n: activeSections, label: 'sections' },
+              ].map(({ n, label, accent }) => (
+                <div key={label} className="flex items-baseline gap-1">
+                  <span className={`text-lg font-semibold tabular-nums leading-none ${accent ? 'text-[#00e05a]' : 'text-[#007830]'}`}>{n}</span>
+                  <span className="text-[10px] text-[#006025] uppercase tracking-wide">{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="mt-3">
+            <DigestFilters allTags={allTags} allSources={allSources} activeTag={filterTag} activeSource={filterSource} />
+          </div>
+        </div>
+      </div>
 
       <div className="px-8 pb-8">
-      <DigestFilters allTags={allTags} allSources={allSources} activeTag={filterTag} activeSource={filterSource} />
 
       {filtered.length === 0 ? (
         <p className="text-neutral-400 text-sm mt-6">

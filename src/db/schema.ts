@@ -17,10 +17,12 @@ export const sources = pgTable('sources', {
   name: text('name').notNull(),
   slug: text('slug').notNull(),
   feedUrl: text('feed_url').notNull(),
+  feedType: text('feed_type').notNull().default('rss'), // 'rss' | 'scrape'
   perspective: text('perspective').notNull(), // Perspective enum
   tier: text('tier').notNull(), // '1' | '2'
   accessType: text('access_type').notNull().default('free'), // 'free' | 'free+paid'
   status: text('status').notNull().default('active'), // SourceStatus
+  lastDiscoveredAt: timestamp('last_discovered_at'), // null = never run; set after each successful scan
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
@@ -62,7 +64,7 @@ export const narratives = pgTable('narratives', {
   topicId: text('topic_id').notNull().references(() => topics.id),
   title: text('title').notNull(),
   description: text('description'),
-  status: text('status').notNull().default('active'), // 'active' | 'archived' | 'resolved'
+  status: text('status').notNull().default('active'), // 'active' | 'dormant' | 'closed'
   parentId: text('parent_id'), // set on split/converge — references narratives.id
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

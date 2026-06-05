@@ -15,7 +15,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const body = await req.json() as { title?: string; description?: string | null; status?: string }
+  const body = await req.json() as { title?: string; description?: string | null; status?: string; parentId?: string | null }
 
   const update: Record<string, unknown> = { updatedAt: new Date() }
 
@@ -31,6 +31,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: `invalid status: ${body.status}` }, { status: 422 })
     }
     update.status = body.status
+  }
+  if ('parentId' in body) {
+    update.parentId = body.parentId ?? null
   }
 
   const [row] = await db.update(narratives).set(update).where(eq(narratives.id, id)).returning()
